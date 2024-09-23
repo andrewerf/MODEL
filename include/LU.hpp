@@ -34,7 +34,7 @@ LU_Result<T, n> LU( Mat<T, n, n> mat )
     {
         for ( Index j = k + 1; j < n; ++j )
         {
-            const auto alpha = -mat( j, k ) / mat( k, k );
+            const T alpha = -mat( j, k ) / mat( k, k );
             L( j, k ) = -alpha;
 
             for ( Index i = 0; i < n; ++i )
@@ -103,7 +103,7 @@ PLUQ_Result<T, n> PLUQ( Mat<T, n, n> mat )
 
         for ( Index j = k + 1; j < n; ++j )
         {
-            const auto alpha = -mat( j, k ) / mat( k, k );
+            const T alpha = -mat( j, k ) / mat( k, k );
             L( j, k ) = -alpha;
 
             for ( Index i = 0; i < n; ++i )

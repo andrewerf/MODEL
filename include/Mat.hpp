@@ -62,6 +62,18 @@ public:
     }
 
 
+    template <typename NewT>
+    Mat<NewT, n, m> cast()
+    {
+        Mat<NewT, n, m> ret;
+        for ( Index row = 0; row < n; ++row )
+        {
+            for ( Index col = 0; col < m; ++col )
+                ret( row, col ) = static_cast<NewT>( (*this)( row, col ) );
+        }
+        return ret;
+    }
+
 
     void swapRows( Index row1, Index row2 )
     {
