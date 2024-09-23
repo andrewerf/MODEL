@@ -80,7 +80,7 @@ PLUQ_Result<T, n> PLUQ( Mat<T, n, n> mat )
     TM L = TM::Identity();
     TM Q = TM::Identity();
 
-    for ( Index k = 0; k < n; ++k )
+    for ( Index k = 0; k < n - 1; ++k )
     {
         // find the max element in the submatrix
         auto [mxrow, mxcol] = argmax( k );
