@@ -3,5 +3,7 @@ project(Mat)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Mat main.cpp)
 include_directories(include)
+
+
+add_subdirectory(examples)
