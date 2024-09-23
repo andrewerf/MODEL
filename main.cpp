@@ -5,31 +5,12 @@
 #include "LU.hpp"
 
 
-template <typename T, Index n, Index m>
-void print( const Mat<T, n, m>& mat )
-{
-    for ( Index i = 0; i < n; ++i )
-    {
-        for ( Index j = 0; j < m; ++j )
-        {
-            std::cout << mat( i, j ) << ' ';
-        }
-        std::cout << '\n';
-    }
-}
-
 
 
 
 
 int main()
 {
-//    Mat<float, 2, 2> mat;
-//    mat(0, 0) = 1.f;
-//    mat(0, 1) = 2.f;
-//    mat(1, 0) = 4.f;
-//    mat(1, 1) = 5.f;
-
     Mat<float, 4, 4> mat;
     mat( 0, 0 ) = 1;
     mat( 0, 1 ) = 2;
@@ -51,15 +32,29 @@ int main()
     mat( 3, 2 ) = 1;
     mat( 3, 3 ) = 1;
 
-    auto [L, U] = LU( mat );
+    auto [P, L, U, Q] = PLUQ( mat );
+    print( P );
+    std::cout << '\n';
     print( L );
     std::cout << '\n';
     print( U );
     std::cout << '\n';
+    print( Q );
+    std::cout << '\n';
 
-    auto check = L * U;
+    auto check = P * L * U * Q;
     print( check );
     std::cout << '\n';
+
+//    auto [L, U] = LU( mat );
+//    print( L );
+//    std::cout << '\n';
+//    print( U );
+//    std::cout << '\n';
+//
+//    auto check = L * U;
+//    print( check );
+//    std::cout << '\n';
 
     return 0;
 }
