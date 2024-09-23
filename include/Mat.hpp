@@ -14,6 +14,12 @@ class Mat
     std::array<T, n*m> a; // a[i][j] == a[i * m + j]
 
 public:
+    struct Coord
+    {
+        Index row;
+        Index col;
+    };
+
 
     Mat()
     {
@@ -23,6 +29,25 @@ public:
 
     explicit Mat( NoInit )
     {}
+
+
+    constexpr Index rows()
+    {
+        return n;
+    }
+    constexpr Index cols()
+    {
+        return m;
+    }
+
+
+    static Mat<T, n, n> Identity()
+    {
+        Mat<T, n, n> r;
+        for ( Index i = 0; i < n; ++i )
+            r( i, i ) = T( 1 );
+        return r;
+    }
 
     T& operator() ( Index row, Index col )
     {
@@ -35,6 +60,21 @@ public:
         assert( col < m );
         return a[row * m + col];
     }
+
+
+
+    void swapRows( Index row1, Index row2 )
+    {
+        for ( Index c = 0; c < cols(); ++c )
+            std::swap( (*this)( row1, c ), (*this)( row2, c ) );
+    }
+
+    void swapCols( Index col1, Index col2 )
+    {
+        for ( Index r = 0; r < rows(); ++r )
+            std::swap( (*this)( r, col1 ), (*this)( r, col2 ) );
+    }
+
 };
 
 
