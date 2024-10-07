@@ -3,6 +3,9 @@
 //
 #pragma once
 
+#include <array>
+#include <cassert>
+
 
 using Index = int;
 struct NoInit{};
@@ -85,6 +88,13 @@ public:
     {
         for ( Index r = 0; r < rows(); ++r )
             std::swap( (*this)( r, col1 ), (*this)( r, col2 ) );
+    }
+
+    void transpose()
+    {
+        for ( Index row = 0; row < n; ++row )
+            for ( Index col = row + 1; col < m; ++col )
+                std::swap( (*this)( row, col ), (*this)( col, row ) );
     }
 
 };

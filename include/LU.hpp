@@ -5,19 +5,6 @@
 
 #include <limits>
 
-template <typename T, Index n, Index m>
-void print( const Mat<T, n, m>& mat )
-{
-    for ( Index i = 0; i < n; ++i )
-    {
-        for ( Index j = 0; j < m; ++j )
-        {
-            std::cout << mat( i, j ) << ' ';
-        }
-        std::cout << '\n';
-    }
-}
-
 
 template <typename T, Index n>
 struct LU_Result

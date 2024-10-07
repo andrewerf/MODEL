@@ -6,3 +6,5 @@ add_executable(pluq_mpfr pluq_mpfr.cpp)
 target_link_libraries(pluq_mpfr Boost::boost mpfr)
 
 add_executable(rounding rounding.cpp)
+
+add_executable(qr qr.cpp)
