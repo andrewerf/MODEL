@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 
 
 using Index = int;
@@ -64,6 +65,31 @@ public:
         return a[row * m + col];
     }
 
+    const T& operator[]( Index i ) const
+        requires ( n == 1 || m == 1 )
+    {
+        if constexpr ( n == 1 )
+            return ( *this )( 0, i );
+        else
+            return ( *this ) ( i, 0 );
+    }
+    T& operator[]( Index i )
+        requires ( n == 1 || m == 1 )
+    {
+        if constexpr ( n == 1 )
+            return ( *this )( 0, i );
+        else
+            return ( *this ) ( i, 0 );
+    }
+
+    T norm2() const
+    {
+        T res = 0;
+        for ( auto& v : a )
+            res += v * v;
+        return std::sqrt( res );
+    }
+
 
     template <typename NewT>
     Mat<NewT, n, m> cast()
@@ -91,12 +117,83 @@ public:
     }
 
     void transpose()
+        requires (n == m)
     {
         for ( Index row = 0; row < n; ++row )
             for ( Index col = row + 1; col < m; ++col )
                 std::swap( (*this)( row, col ), (*this)( col, row ) );
     }
 
+    Mat<T, m, n> transposed()
+    {
+        if constexpr ( n == m )
+        {
+            auto r = *this;
+            r.transpose();
+            return r;
+        }
+        else
+        {
+            Mat<T, m, n> r;
+            for ( Index row = 0; row < n; ++row )
+                for ( Index col = 0; col < m; ++col )
+                    r( col, row ) = (*this)( row, col );
+            return r;
+        }
+    }
+
+    Mat<T, n, m> operator+=( const Mat<T, n, m>& other )
+    {
+        for ( Index i = 0; i < n; ++i )
+            for ( Index j = 0; j < m; ++j )
+                (*this)( i, j ) += other( i, j );
+        return *this;
+    }
+
+    Mat<T, n, m> operator-=( const Mat<T, n, m>& other )
+    {
+        for ( Index i = 0; i < n; ++i )
+            for ( Index j = 0; j < m; ++j )
+                (*this)( i, j ) -= other( i, j );
+        return *this;
+    }
+
+    Mat<T, n, m> operator*=( T x )
+    {
+        for ( Index i = 0; i < n; ++i )
+            for ( Index j = 0; j < m; ++j )
+                (*this)( i, j ) *= x;
+        return *this;
+    }
+    Mat<T, n, m> operator/=( T x )
+    {
+        for ( Index i = 0; i < n; ++i )
+            for ( Index j = 0; j < m; ++j )
+                (*this)( i, j ) /= x;
+        return *this;
+    }
+
+    Mat<T, 1, m> row( Index i ) const
+    {
+        Mat<T, 1, m> ret( NoInit{} );
+        for ( Index k = 0; k < m; ++k )
+            ret[k] = (*this)( i, k );
+        return ret;
+    }
+
+    Mat<T, n, 1> col( Index i ) const
+    {
+        Mat<T, n, 1> ret( NoInit{} );
+        for ( Index k = 0; k < n; ++k )
+            ret[k] = (*this)( k, i );
+        return ret;
+    }
+
+    void setCol( Index i, const Mat<T, n, 1>& col )
+    {
+        for ( Index k = 0; k < n; ++k )
+            (*this)( k, i ) = col[k];
+    }
 };
 
 
@@ -112,5 +209,48 @@ Mat<T, n1, n2> operator*( const Mat<T, n1, m>& a, const Mat<T, m, n2>& b )
                 res( i, j ) += a( i, k ) * b( k, j );
         }
     }
+    return res;
+}
+
+template <typename T, Index n, Index m>
+Mat<T, n, m> operator*( Mat<T, n, m> mat, T x )
+{
+    mat *= x;
+    return mat;
+}
+template <typename T, Index n, Index m>
+Mat<T, n, m> operator*( T x, Mat<T, n, m> mat )
+{
+    mat *= x;
+    return mat;
+}
+template <typename T, Index n, Index m>
+Mat<T, n, m> operator/( Mat<T, n, m> mat, T x )
+{
+    mat /= x;
+    return mat;
+}
+
+
+template <typename T, Index n, Index m>
+Mat<T, n, m> operator+( Mat<T, n, m> a, const Mat<T, n, m>& b )
+{
+    a += b;
+    return a;
+}
+template <typename T, Index n, Index m>
+Mat<T, n, m> operator-( Mat<T, n, m> a, const Mat<T, n, m>& b )
+{
+    a -= b;
+    return a;
+}
+
+
+template <typename T, Index n>
+T dot( const Mat<T, 1, n>& a, const Mat<T, n, 1>& b )
+{
+    T res = 0;
+    for ( Index k = 0; k < n; ++k )
+        res += a[k] * b[k];
     return res;
 }

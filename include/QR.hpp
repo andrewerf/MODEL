@@ -44,3 +44,35 @@ QR_FullResult<T, m, n> QR_Given( const Mat<T, m, n>& A )
 
     return { Q, R };
 }
+
+template <typename T, Index m, Index n>
+struct QR_CompressedResult
+{
+    Mat<T, m, n> Q;
+    Mat<T, n, n> R;
+};
+
+template <typename T, Index m, Index n>
+QR_CompressedResult<T, m, n> QR_GramSchmidt( const Mat<T, m, n>& A )
+{
+    static_assert( m >= n, "Number of rows must be greater or equal to the number of columns" );
+
+    Mat<T, m, n> Q;
+    Mat<T, n, n> R;
+
+    for ( Index col = 0; col < n; ++col )
+    {
+        auto q = A.col( col );
+        for ( Index row = 0; row < col - 1; ++row )
+        {
+            auto qi = Q.col( row );
+            R( row, col ) = dot( qi.transposed(), q );
+            q -= R( row, col ) * qi;
+        }
+
+        R( col, col ) = q.norm2();
+        Q.setCol( col, q / R( col, col ) );
+    }
+
+    return { Q, R };
+}
