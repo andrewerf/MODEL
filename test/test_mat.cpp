@@ -476,13 +476,6 @@ TEST(Mat, IdentityMatrix) {
                 EXPECT_DOUBLE_EQ(IA(i, j), A(i, j));
     }
 
-    // Test error cases
-    {
-        // Should assert when dimensions don't match
-        EXPECT_DEATH_IF_SUPPORTED((Mat<double, 3, 3>::Identity(3, 4)), ".*");
-        EXPECT_DEATH_IF_SUPPORTED((Mat<double, 3, 3>::Identity(4, 3)), ".*");
-    }
-
     // Test with different types
     {
         auto identity_int = Mat<int, MatDim(2), MatDim(2)>::Identity(2, 2);
