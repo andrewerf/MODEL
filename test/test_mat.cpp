@@ -376,3 +376,153 @@ TEST(Mat, ScalarOperations) {
         }
     }
 }
+
+TEST(Mat, CopyConstructor) {
+    // Test static size matrix copy
+    {
+        Mat<double, MatDim(2), MatDim(2)> original;
+        for(Index i = 0; i < 2; ++i)
+            for(Index j = 0; j < 2; ++j)
+                original(i, j) = i * 2 + j;
+
+        Mat<double, MatDim(2), MatDim(2)> copied(original);
+
+        // Verify values are correctly copied
+        for(Index i = 0; i < 2; ++i)
+            for(Index j = 0; j < 2; ++j)
+                EXPECT_DOUBLE_EQ(copied(i, j), original(i, j));
+
+        // Verify independence
+        copied(0, 0) = 99.0;
+        EXPECT_NE(copied(0, 0), original(0, 0));
+    }
+
+    // Test dynamic size matrix copy
+    {
+        Mat<double> original(3, 4);
+        for(Index i = 0; i < 3; ++i)
+            for(Index j = 0; j < 4; ++j)
+                original(i, j) = i * 4 + j;
+
+        Mat<double> copied(original);
+
+        // Verify dimensions
+        EXPECT_EQ(copied.rows(), original.rows());
+        EXPECT_EQ(copied.cols(), original.cols());
+
+        // Verify values
+        for(Index i = 0; i < 3; ++i)
+            for(Index j = 0; j < 4; ++j)
+                EXPECT_DOUBLE_EQ(copied(i, j), original(i, j));
+    }
+
+    // Test copy between static and dynamic matrices
+    {
+        Mat<double, 2, 2> static_mat;
+        for(Index i = 0; i < 2; ++i)
+            for(Index j = 0; j < 2; ++j)
+                static_mat(i, j) = i + j;
+
+        Mat<double> dynamic_copy(static_mat);
+        EXPECT_EQ(dynamic_copy.rows(), 2);
+        EXPECT_EQ(dynamic_copy.cols(), 2);
+
+        for(Index i = 0; i < 2; ++i)
+            for(Index j = 0; j < 2; ++j)
+                EXPECT_DOUBLE_EQ(dynamic_copy(i, j), static_mat(i, j));
+    }
+}
+
+// Test Identity matrix creation
+TEST(Mat, IdentityMatrix) {
+    // Test static size identity matrix
+    {
+        auto identity = Mat<double, MatDim(3), MatDim(3)>::Identity(3, 3);
+
+        // Check dimensions
+        EXPECT_EQ(identity.rows(), 3);
+        EXPECT_EQ(identity.cols(), 3);
+
+        // Check diagonal elements are 1
+        for(Index i = 0; i < 3; ++i)
+            EXPECT_DOUBLE_EQ(identity(i, i), 1.0);
+
+        // Check off-diagonal elements are 0
+        for(Index i = 0; i < 3; ++i)
+            for(Index j = 0; j < 3; ++j)
+                if(i != j)
+                    EXPECT_DOUBLE_EQ(identity(i, j), 0.0);
+    }
+
+    // Test identity matrix properties
+    {
+        auto I = Mat<double, MatDim(2), MatDim(2)>::Identity(2, 2);
+        Mat<double, MatDim(2), MatDim(2)> A;
+
+        // Fill A with some values
+        A(0, 0) = 1; A(0, 1) = 2;
+        A(1, 0) = 3; A(1, 1) = 4;
+
+        // Test A * I = A
+        auto AI = A * I;
+        for(Index i = 0; i < 2; ++i)
+            for(Index j = 0; j < 2; ++j)
+                EXPECT_DOUBLE_EQ(AI(i, j), A(i, j));
+
+        // Test I * A = A
+        auto IA = I * A;
+        for(Index i = 0; i < 2; ++i)
+            for(Index j = 0; j < 2; ++j)
+                EXPECT_DOUBLE_EQ(IA(i, j), A(i, j));
+    }
+
+    // Test error cases
+    {
+        // Should assert when dimensions don't match
+        EXPECT_DEATH((Mat<double, 3, 3>::Identity(3, 4)), ".*");
+        EXPECT_DEATH((Mat<double, 3, 3>::Identity(4, 3)), ".*");
+    }
+
+    // Test with different types
+    {
+        auto identity_int = Mat<int, MatDim(2), MatDim(2)>::Identity(2, 2);
+        EXPECT_EQ(identity_int(0, 0), 1);
+        EXPECT_EQ(identity_int(1, 1), 1);
+        EXPECT_EQ(identity_int(0, 1), 0);
+        EXPECT_EQ(identity_int(1, 0), 0);
+    }
+}
+
+// Test mixed operations with identity matrix
+TEST(Mat, IdentityOperations) {
+    const Index size = 3;
+    auto I = Mat<double, MatDim(3), MatDim(3)>::Identity(size, size);
+    Mat<double, MatDim(3), MatDim(3)> A;
+
+    // Fill A with some values
+    for(Index i = 0; i < size; ++i)
+        for(Index j = 0; j < size; ++j)
+            A(i, j) = i * size + j + 1;
+
+    // Test A + I
+    auto AI_sum = A + I;
+    for(Index i = 0; i < size; ++i) {
+        for(Index j = 0; j < size; ++j) {
+            if(i == j)
+                EXPECT_DOUBLE_EQ(AI_sum(i, j), A(i, j) + 1.0);
+            else
+                EXPECT_DOUBLE_EQ(AI_sum(i, j), A(i, j));
+        }
+    }
+
+    // Test scalar multiplication
+    auto I_scaled = 2.0 * I;
+    for(Index i = 0; i < size; ++i) {
+        for(Index j = 0; j < size; ++j) {
+            if(i == j)
+                EXPECT_DOUBLE_EQ(I_scaled(i, j), 2.0);
+            else
+                EXPECT_DOUBLE_EQ(I_scaled(i, j), 0.0);
+        }
+    }
+}

@@ -109,9 +109,6 @@ public:
         static_assert( std::same_as<typename Impl::ElemT, ElemT> );
         static_assert( std::derived_from<Impl_, MatFacade> );
         static_assert( ( n.dynamic || n.val >= 0 ) && ( m.dynamic || m.val >= 0 ) );
-
-        assert( rowsDynamic_ >= 0 );
-        assert( colsDynamic_ >= 0 );
     };
 
     constexpr MatFacade()
@@ -148,6 +145,28 @@ struct Mat : public MatFacade<Mat<T, n, m>, T, n, m>
     Mat( Index rows, Index cols ):
         Parent( rows, cols )
     { a.resize( rows * cols ); }
+
+    /// Copy constructor from any Mat-like type
+    template <typename Impl, MatDim n1, MatDim m1>
+    Mat( const MatFacade<Impl, T, n1, m1>& other ):
+        Parent( other.rows(), other.cols() )
+    {
+        static_assert( n1 == m1 );
+        a.resize( rows() * cols() );
+        for ( Index i = 0; i < rows(); ++i )
+            for ( Index j = 0; j < cols(); ++j )
+                (*this)( i, j ) = other( i, j );
+    }
+
+    static Mat Identity( Index rows, Index cols )
+        requires ( m == n )
+    {
+        assert( rows == cols );
+        Mat res( rows, cols );
+        for ( Index i = 0; i < rows; ++i )
+            res( i, i ) = 1;
+        return res;
+    }
 
     constexpr T& operator() ( Index i, Index j )
         { return a[i * cols() + j]; }
