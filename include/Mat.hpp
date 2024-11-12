@@ -102,6 +102,17 @@ public:
             return m.val;
     }
 
+    constexpr void swapCols( Index c1, Index c2 )
+    {
+        for ( Index r = 0; r < rows(); ++r )
+            std::swap( (*this)( r, c1 ), (*this)( r, c2 ) );
+    }
+    constexpr void swapRows( Index r1, Index r2 )
+    {
+        for ( Index c = 0; c < cols(); ++c )
+            std::swap( (*this)( r1, c ), (*this)( r2, c ) );
+    }
+
     /// This function is called to ensure correct usage of the CRTP
     constexpr void checkInvariants()
     {
