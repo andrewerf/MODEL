@@ -91,7 +91,7 @@ Mat<T, n, n> multiply4(const Mat<T, n, n>& P, const Mat<T, n, n>& L,
 TEST(LU, LUBasicProperties) {
     // 2x2 matrix test
     {
-        Mat<double, MatDim(2), MatDim(2)> A;
+        Mat<double, 2, 2> A;
         A(0, 0) = 4; A(0, 1) = 3;
         A(1, 0) = 6; A(1, 1) = 3;
 
@@ -109,7 +109,7 @@ TEST(LU, LUBasicProperties) {
 
     // 3x3 matrix test
     {
-        Mat<double, MatDim(3), MatDim(3)> A;
+        Mat<double, 3, 3> A;
         // Using a well-conditioned matrix
         A(0, 0) = 4; A(0, 1) = -2; A(0, 2) = 1;
         A(1, 0) = -2; A(1, 1) = 4; A(1, 2) = -2;
@@ -139,7 +139,7 @@ TEST(LU, LUBasicProperties) {
 TEST(LU, LUSpecialCases) {
     // Identity matrix
     {
-        auto I = Mat<double, MatDim(3), MatDim(3)>::Identity(3, 3);
+        auto I = Mat<double, 3, 3>::Identity(3, 3);
         auto result = LU(I);
 
         // L should be identity
@@ -150,7 +150,7 @@ TEST(LU, LUSpecialCases) {
 
     // Upper triangular matrix
     {
-        Mat<double, MatDim(3), MatDim(3)> A;
+        Mat<double, 3, 3> A;
         for (Index i = 0; i < 3; ++i)
             for (Index j = 0; j < 3; ++j)
                 A(i, j) = (j >= i) ? i + j + 1 : 0;
@@ -158,7 +158,7 @@ TEST(LU, LUSpecialCases) {
         auto result = LU(A);
 
         // L should be identity
-        auto I = Mat<double, MatDim(3), MatDim(3)>::Identity(3, 3);
+        auto I = Mat<double, 3, 3>::Identity(3, 3);
         EXPECT_TRUE(matrix_near(result.L, I));
         // U should be the original matrix
         EXPECT_TRUE(matrix_near(result.U, A));
@@ -166,7 +166,7 @@ TEST(LU, LUSpecialCases) {
 
     // Lower triangular matrix
     {
-        Mat<double, MatDim(3), MatDim(3)> A;
+        Mat<double, 3, 3> A;
         for (Index i = 0; i < 3; ++i)
             for (Index j = 0; j < 3; ++j)
                 A(i, j) = (j <= i) ? i + j + 1 : 0;
@@ -182,7 +182,7 @@ TEST(LU, LUSpecialCases) {
 // Test numerical stability
 TEST(LU, LUNumericalStability) {
     // Test with a poorly conditioned matrix
-    Mat<double, MatDim(3), MatDim(3)> A;
+    Mat<double, 3, 3> A;
     A(0, 0) = 1e-10; A(0, 1) = 1; A(0, 2) = 1;
     A(1, 0) = 1; A(1, 1) = 1; A(1, 2) = 1;
     A(2, 0) = 1; A(2, 1) = 1; A(2, 2) = 1;
@@ -199,7 +199,7 @@ TEST(LU, LUNumericalStability) {
 TEST(LU, LUDifferentTypes) {
     // Test with float
     {
-        Mat<float, MatDim(2), MatDim(2)> A;
+        Mat<float, 2, 2> A;
         A(0, 0) = 4.0f; A(0, 1) = 3.0f;
         A(1, 0) = 6.0f; A(1, 1) = 3.0f;
 
@@ -210,7 +210,7 @@ TEST(LU, LUDifferentTypes) {
 
     // Test with double
     {
-        Mat<double, MatDim(2), MatDim(2)> A;
+        Mat<double, 2, 2> A;
         A(0, 0) = 4.0; A(0, 1) = 3.0;
         A(1, 0) = 6.0; A(1, 1) = 3.0;
 
@@ -221,7 +221,7 @@ TEST(LU, LUDifferentTypes) {
 }
 
 TEST(PLUQ, SimpleMatrix2x2) {
-    Mat<double, MatDim(2), MatDim(2)> A;
+    Mat<double, 2, 2> A;
     A(0,0) = 4; A(0,1) = 3;
     A(1,0) = 6; A(1,1) = 3;
 
@@ -247,7 +247,7 @@ TEST(PLUQ, SimpleMatrix2x2) {
 }
 
 TEST(PLUQ, Matrix3x3) {
-    Mat<double, MatDim(3), MatDim(3)> A;
+    Mat<double, 3, 3> A;
     // Fill with a known invertible matrix
     A(0,0) = 2; A(0,1) = -1; A(0,2) = 0;
     A(1,0) = -1; A(1,1) = 2; A(1,2) = -1;
@@ -269,7 +269,7 @@ TEST(PLUQ, Matrix3x3) {
 }
 
 TEST(PLUQ, DiagonalMatrix) {
-    Mat<double, MatDim(3), MatDim(3)> A;
+    Mat<double, 3, 3> A;
     // Create a diagonal matrix
     for(Index i = 0; i < 3; ++i)
         for(Index j = 0; j < 3; ++j)
@@ -290,7 +290,7 @@ TEST(PLUQ, DiagonalMatrix) {
 
 TEST(PLUQ, IdentityMatrix) {
     const Index size = 3;
-    auto A = Mat<double, MatDim(3), MatDim(3)>::Identity(size, size);
+    auto A = Mat<double>::Identity(size, size);
 
     auto [P, L, U, Q] = PLUQ(A);
 
@@ -308,7 +308,7 @@ TEST(PLUQ, IdentityMatrix) {
 }
 
 TEST(PLUQ, NearSingularMatrix) {
-    Mat<double, MatDim(2), MatDim(2)> A;
+    Mat<double, 2, 2> A;
     // Create a nearly singular matrix
     A(0,0) = 1e-15; A(0,1) = 1;
     A(1,0) = 1;     A(1,1) = 1;
