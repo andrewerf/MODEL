@@ -479,8 +479,8 @@ TEST(Mat, IdentityMatrix) {
     // Test error cases
     {
         // Should assert when dimensions don't match
-        EXPECT_DEATH((Mat<double, 3, 3>::Identity(3, 4)), ".*");
-        EXPECT_DEATH((Mat<double, 3, 3>::Identity(4, 3)), ".*");
+        EXPECT_DEATH_IF_SUPPORTED((Mat<double, 3, 3>::Identity(3, 4)), ".*");
+        EXPECT_DEATH_IF_SUPPORTED((Mat<double, 3, 3>::Identity(4, 3)), ".*");
     }
 
     // Test with different types
