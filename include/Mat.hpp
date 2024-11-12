@@ -3,254 +3,281 @@
 //
 #pragma once
 
-#include <array>
+#include <vector>
 #include <cassert>
 #include <cmath>
 
 
-using Index = int;
-struct NoInit{};
-
-
-template <typename T, Index n, Index m>
-class Mat
+namespace M
 {
-    std::array<T, n*m> a; // a[i][j] == a[i * m + j]
 
+
+/// Type used to represent dimensions and indexes of matrices
+using Index = int;
+
+/// A single matrix dimension
+/// It has two constructors:
+///     - if ``Index`` is given, then it denotes a dimension which is known at compile time.
+///     - the default constructor denotes a dimension which is only known at runtime
+/// The usage of this class is to perform static (i.e. compile-time) shape inference where possible.
+/// @note This struct is designed to be used only in compile time.
+struct MatDim
+{
+    consteval MatDim( Index x ): val( x ), dynamic( false ) {}
+    consteval MatDim(): val( -1 ), dynamic( true ) {}
+
+    Index val;
+    bool dynamic;
+};
+consteval bool operator==( MatDim a, MatDim b )
+{
+    if ( a.dynamic || b.dynamic )
+        return true;
+    else
+        return a.val == b.val;
+}
+consteval bool operator<( MatDim a, MatDim b )
+{
+    if ( a.dynamic || b.dynamic )
+        return true;
+    else
+        return a.val < b.val;
+}
+consteval bool operator<=( MatDim a, MatDim b )
+{
+    if ( a.dynamic || b.dynamic )
+        return true;
+    else
+        return a.val <= b.val;
+}
+
+
+/// Just for convenience
+constexpr MatDim DynamicMatDim;
+
+
+/// Everything we need from the implementation of a Matrix
+template <typename Mat>
+concept MatImplC = requires( Mat mat, Index i, Index j )
+{
+    typename Mat::ElemT;
+    requires ( !std::is_reference_v<typename Mat::ElemT> );
+    { mat( i, j ) } -> std::convertible_to<typename Mat::ElemT>;
+};
+
+
+/// A base class for the static polymorphism based on CRTP. Represents the interface of a matrix.
+template <typename Impl_, typename ElemT_, MatDim n, MatDim m>
+class MatFacade
+{
+protected:
+    Index rowsDynamic_, colsDynamic_;
 public:
-    struct Coord
+    using ElemT = ElemT_;
+    using Impl = Impl_;
+
+    constexpr Impl& impl()
+        { return static_cast<Impl&>( *this ); }
+    constexpr const Impl& impl() const
+        { return static_cast<const Impl&>( *this ); }
+
+    constexpr ElemT& operator() ( Index i, Index j )
+        { return impl()( i, j ); }
+    constexpr const ElemT& operator() ( Index i, Index j ) const
+        { return impl()( i, j ); }
+
+
+    constexpr Index rows() const
     {
-        Index row;
-        Index col;
+        if constexpr ( n.dynamic )
+            return rowsDynamic_;
+        else
+            return n.val;
+    }
+    constexpr Index cols() const
+    {
+        if constexpr ( m.dynamic )
+            return colsDynamic_;
+        else
+            return m.val;
+    }
+
+    /// This function is called to ensure correct usage of the CRTP
+    constexpr void checkInvariants()
+    {
+        static_assert( MatImplC<Impl> );
+        static_assert( std::same_as<typename Impl::ElemT, ElemT> );
+        static_assert( std::derived_from<Impl_, MatFacade> );
+        static_assert( ( n.dynamic || n.val >= 0 ) && ( m.dynamic || m.val >= 0 ) );
+
+        assert( rowsDynamic_ >= 0 );
+        assert( colsDynamic_ >= 0 );
     };
 
-
-    Mat()
+    constexpr MatFacade()
+        requires ( !n.dynamic && !m.dynamic )
     {
-        for ( Index i = 0; i < n*m; ++i )
-            a[i] = T( 0 );
+        checkInvariants();
     }
-
-    explicit Mat( NoInit )
-    {}
-
-
-    constexpr Index rows()
+    constexpr MatFacade( Index rows, Index cols ):
+        rowsDynamic_( rows ), colsDynamic_( cols )
     {
-        return n;
-    }
-    constexpr Index cols()
-    {
-        return m;
-    }
-
-
-    static Mat<T, n, n> Identity()
-    {
-        Mat<T, n, n> r;
-        for ( Index i = 0; i < n; ++i )
-            r( i, i ) = T( 1 );
-        return r;
-    }
-
-    T& operator() ( Index row, Index col )
-    {
-        return a[row * m + col];
-    }
-
-    const T& operator() ( Index row, Index col ) const
-    {
-        assert( row < n );
-        assert( col < m );
-        return a[row * m + col];
-    }
-
-    const T& operator[]( Index i ) const
-        requires ( n == 1 || m == 1 )
-    {
-        if constexpr ( n == 1 )
-            return ( *this )( 0, i );
-        else
-            return ( *this ) ( i, 0 );
-    }
-    T& operator[]( Index i )
-        requires ( n == 1 || m == 1 )
-    {
-        if constexpr ( n == 1 )
-            return ( *this )( 0, i );
-        else
-            return ( *this ) ( i, 0 );
-    }
-
-    T norm2() const
-    {
-        T res = 0;
-        for ( auto& v : a )
-            res += v * v;
-        return std::sqrt( res );
-    }
-
-
-    template <typename NewT>
-    Mat<NewT, n, m> cast()
-    {
-        Mat<NewT, n, m> ret;
-        for ( Index row = 0; row < n; ++row )
-        {
-            for ( Index col = 0; col < m; ++col )
-                ret( row, col ) = static_cast<NewT>( (*this)( row, col ) );
-        }
-        return ret;
-    }
-
-
-    void swapRows( Index row1, Index row2 )
-    {
-        for ( Index c = 0; c < cols(); ++c )
-            std::swap( (*this)( row1, c ), (*this)( row2, c ) );
-    }
-
-    void swapCols( Index col1, Index col2 )
-    {
-        for ( Index r = 0; r < rows(); ++r )
-            std::swap( (*this)( r, col1 ), (*this)( r, col2 ) );
-    }
-
-    void transpose()
-        requires (n == m)
-    {
-        for ( Index row = 0; row < n; ++row )
-            for ( Index col = row + 1; col < m; ++col )
-                std::swap( (*this)( row, col ), (*this)( col, row ) );
-    }
-
-    Mat<T, m, n> transposed()
-    {
-        if constexpr ( n == m )
-        {
-            auto r = *this;
-            r.transpose();
-            return r;
-        }
-        else
-        {
-            Mat<T, m, n> r;
-            for ( Index row = 0; row < n; ++row )
-                for ( Index col = 0; col < m; ++col )
-                    r( col, row ) = (*this)( row, col );
-            return r;
-        }
-    }
-
-    Mat<T, n, m> operator+=( const Mat<T, n, m>& other )
-    {
-        for ( Index i = 0; i < n; ++i )
-            for ( Index j = 0; j < m; ++j )
-                (*this)( i, j ) += other( i, j );
-        return *this;
-    }
-
-    Mat<T, n, m> operator-=( const Mat<T, n, m>& other )
-    {
-        for ( Index i = 0; i < n; ++i )
-            for ( Index j = 0; j < m; ++j )
-                (*this)( i, j ) -= other( i, j );
-        return *this;
-    }
-
-    Mat<T, n, m> operator*=( T x )
-    {
-        for ( Index i = 0; i < n; ++i )
-            for ( Index j = 0; j < m; ++j )
-                (*this)( i, j ) *= x;
-        return *this;
-    }
-    Mat<T, n, m> operator/=( T x )
-    {
-        for ( Index i = 0; i < n; ++i )
-            for ( Index j = 0; j < m; ++j )
-                (*this)( i, j ) /= x;
-        return *this;
-    }
-
-    Mat<T, 1, m> row( Index i ) const
-    {
-        Mat<T, 1, m> ret( NoInit{} );
-        for ( Index k = 0; k < m; ++k )
-            ret[k] = (*this)( i, k );
-        return ret;
-    }
-
-    Mat<T, n, 1> col( Index i ) const
-    {
-        Mat<T, n, 1> ret( NoInit{} );
-        for ( Index k = 0; k < n; ++k )
-            ret[k] = (*this)( k, i );
-        return ret;
-    }
-
-    void setCol( Index i, const Mat<T, n, 1>& col )
-    {
-        for ( Index k = 0; k < n; ++k )
-            (*this)( k, i ) = col[k];
+        if constexpr ( !n.dynamic )
+            assert( rowsDynamic_ == n.val );
+        if constexpr ( !m.dynamic )
+            assert( colsDynamic_ == m.val );
+        checkInvariants();
     }
 };
 
 
-template <typename T, Index n1, Index m, Index n2>
-Mat<T, n1, n2> operator*( const Mat<T, n1, m>& a, const Mat<T, m, n2>& b )
+/// Simple matrix implementation
+template <typename T, MatDim n = DynamicMatDim, MatDim m = DynamicMatDim>
+struct Mat : public MatFacade<Mat<T, n, m>, T, n, m>
 {
-    Mat<T, n1, n2> res;
-    for ( Index i = 0; i < n1; ++i )
+    using ElemT = T;
+    using Parent = MatFacade<Mat<T, n, m>, T, n, m>;
+    using Parent::cols;
+    using Parent::rows;
+
+    /// If both dimensions are known at compile time, we know how many elements to allocate
+    Mat()
+        requires ( !n.dynamic && !m.dynamic )
+    { a.resize( n.val * m.val ); }
+
+    Mat( Index rows, Index cols ):
+        Parent( rows, cols )
+    { a.resize( rows * cols ); }
+
+    constexpr T& operator() ( Index i, Index j )
+        { return a[i * cols() + j]; }
+    constexpr const T& operator() ( Index i, Index j ) const
+        { return a[i * cols() + j]; }
+
+    std::vector<T> a;
+};
+
+
+namespace detail
+{
+
+template <typename MatA, typename MatB, typename MatC>
+void productImpl( const MatA& a, const MatB& b, MatC& c )
+{
+    assert( a.cols() == b.rows() );
+    for ( Index i = 0; i < a.rows(); ++i )
     {
-        for ( Index j = 0; j < n2; ++j )
+        for ( Index j = 0; j < b.cols(); ++j )
         {
-            for ( Index k = 0; k < m; ++k )
-                res( i, j ) += a( i, k ) * b( k, j );
+            c( i, j ) = 0;
+            for ( Index t = 0; t < a.cols(); ++t )
+            {
+                c( i, j ) += a( i, t ) * b( t, j );
+            }
         }
     }
-    return res;
 }
 
-template <typename T, Index n, Index m>
-Mat<T, n, m> operator*( Mat<T, n, m> mat, T x )
+template <typename MatA, typename MatB, typename MatC>
+void sumImpl( const MatA& a, const MatB& b, MatC& c )
 {
-    mat *= x;
-    return mat;
+    assert( a.cols() == b.cols() );
+    assert( a.rows() == b.rows() );
+    assert( a.cols() == c.cols() );
+    assert( a.rows() == c.rows() );
+    for ( Index i = 0; i < a.rows(); ++i )
+    {
+        for ( Index j = 0; j < a.cols(); ++j )
+        {
+            c( i, j ) = a( i, j ) + b( i, j );
+        }
+    }
 }
-template <typename T, Index n, Index m>
-Mat<T, n, m> operator*( T x, Mat<T, n, m> mat )
-{
-    mat *= x;
-    return mat;
-}
-template <typename T, Index n, Index m>
-Mat<T, n, m> operator/( Mat<T, n, m> mat, T x )
-{
-    mat /= x;
-    return mat;
+
 }
 
 
-template <typename T, Index n, Index m>
-Mat<T, n, m> operator+( Mat<T, n, m> a, const Mat<T, n, m>& b )
+template <typename T,
+          typename Impl1, MatDim n1, MatDim m1,
+          typename Impl2, MatDim n2, MatDim m2>
+Mat<T, n1, m2> operator*( const MatFacade<Impl1, T, n1, m1>& a, const MatFacade<Impl2, T, n2, m2>& b )
 {
-    a += b;
-    return a;
+    static_assert( m1 == n2 );
+    Mat<T, n1, m2> ret( a.rows(), b.cols() );
+    detail::productImpl( a, b, ret );
+    return ret;
 }
-template <typename T, Index n, Index m>
-Mat<T, n, m> operator-( Mat<T, n, m> a, const Mat<T, n, m>& b )
+
+template <typename T,
+        typename Impl1, MatDim n1, MatDim m1,
+        typename Impl2, MatDim n2, MatDim m2>
+Mat<T, n1, m1> operator+( const MatFacade<Impl1, T, n1, m1>& a, const MatFacade<Impl2, T, n2, m2>& b )
 {
-    a -= b;
-    return a;
+    static_assert( n1 == n2 );
+    static_assert( m1 == m2 );
+    Mat<T, n1, m1> ret( a.rows(), a.cols() );
+    detail::sumImpl( a, b, ret );
+    return ret;
 }
 
 
-template <typename T, Index n>
-T dot( const Mat<T, 1, n>& a, const Mat<T, n, 1>& b )
+template <typename T, typename Impl, MatDim n, MatDim m>
+Mat<T, n, m> operator+( const MatFacade<Impl, T, n, m>& a, T val )
 {
-    T res = 0;
-    for ( Index k = 0; k < n; ++k )
-        res += a[k] * b[k];
-    return res;
+    Mat<T, n, m> ret( a.rows(), a.cols() );
+    for ( size_t i = 0; i < a.rows(); ++i )
+        for ( size_t j = 0; j < a.cols(); ++j )
+            ret( i, j ) = a( i, j ) + val;
+    return ret;
+}
+template <typename T, typename Impl, MatDim n, MatDim m>
+Mat<T, n, m> operator+( T val, const MatFacade<Impl, T, n, m>& a )
+{
+    Mat<T, n, m> ret( a.rows(), a.cols() );
+    for ( size_t i = 0; i < a.rows(); ++i )
+        for ( size_t j = 0; j < a.cols(); ++j )
+            ret( i, j ) = a( i, j ) + val;
+    return ret;
+}
+
+template <typename T, typename Impl, MatDim n, MatDim m>
+Mat<T, n, m> operator-( const MatFacade<Impl, T, n, m>& a, T val )
+{
+    Mat<T, n, m> ret( a.rows(), a.cols() );
+    for ( size_t i = 0; i < a.rows(); ++i )
+        for ( size_t j = 0; j < a.cols(); ++j )
+            ret( i, j ) = a( i, j ) - val;
+    return ret;
+}
+template <typename T, typename Impl, MatDim n, MatDim m>
+Mat<T, n, m> operator-( T val, const MatFacade<Impl, T, n, m>& a )
+{
+    Mat<T, n, m> ret( a.rows(), a.cols() );
+    for ( size_t i = 0; i < a.rows(); ++i )
+        for ( size_t j = 0; j < a.cols(); ++j )
+            ret( i, j ) = val - a( i, j );
+    return ret;
+}
+
+
+template <typename T, typename Impl, MatDim n, MatDim m>
+Mat<T, n, m> operator*( const MatFacade<Impl, T, n, m>& a, T val )
+{
+    Mat<T, n, m> ret( a.rows(), a.cols() );
+    for ( size_t i = 0; i < a.rows(); ++i )
+        for ( size_t j = 0; j < a.cols(); ++j )
+            ret( i, j ) = a( i, j ) * val;
+    return ret;
+}
+template <typename T, typename Impl, MatDim n, MatDim m>
+Mat<T, n, m> operator*( T val, const MatFacade<Impl, T, n, m>& a )
+{
+    Mat<T, n, m> ret( a.rows(), a.cols() );
+    for ( size_t i = 0; i < a.rows(); ++i )
+        for ( size_t j = 0; j < a.cols(); ++j )
+            ret( i, j ) = a( i, j ) * val;
+    return ret;
+}
+
+
 }
