@@ -1,7 +1,14 @@
-enable_testing()
-
 add_executable(test_all test_mat.cpp test_lu.cpp)
 target_link_libraries(test_all GTest::gtest_main)
 
-find_package(GTest REQUIRED)
+find_package(GTest)
+if( NOT GTest_FOUND )
+    set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
+    set(BUILD_GTEST ON CACHE BOOL "" FORCE)
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/googletest 3rdparty/googletest)
+    set_target_properties(gtest PROPERTIES FOLDER extern)
+    set_target_properties(gtest_main PROPERTIES FOLDER extern)
+endif ()
+include(GoogleTest)
 gtest_discover_tests(test_all)
