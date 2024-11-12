@@ -1,18 +1,25 @@
-//
-// Created by Andrey Aralov on 10/7/24.
-//
 #pragma once
+
 #include <iostream>
 
-template <typename T, Index n, Index m>
-void print( const Mat<T, n, m>& mat )
+#include <Mat.hpp>
+
+namespace M
 {
-    for ( Index i = 0; i < n; ++i )
+
+template <typename Impl, typename T, MatDim n, MatDim m>
+std::ostream& operator<<( std::ostream& os, const MatFacade<Impl, T, n, m>& mat )
+{
+    for ( Index i = 0; i < mat.rows(); ++i )
     {
-        for ( Index j = 0; j < m; ++j )
+        for ( Index j = 0; j < mat.cols(); ++j )
         {
-            std::cout << mat( i, j ) << ' ';
+            os << mat( i, j ) << ' ';
         }
-        std::cout << '\n';
+        os << '\n';
     }
+    return os;
 }
+
+}
+

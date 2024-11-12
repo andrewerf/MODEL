@@ -1,0 +1,32 @@
+name: Ubuntu24.04
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: g++ cmake make libgtest-dev
+          execute_install_scripts: true
+
+      - name: Build
+        run: |
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel 4
+
+      - name: Unit Test
+        run: ${{github.workspace}}/build/test/test_all

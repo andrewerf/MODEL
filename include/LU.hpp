@@ -4,57 +4,68 @@
 #pragma once
 
 #include <limits>
+#include <Mat.hpp>
 
 
-template <typename T, Index n>
+namespace M
+{
+
+
+template <typename T, MatDim n>
 struct LU_Result
 {
     Mat<T, n, n> L, U;
 };
 
-template <typename T, Index n>
-LU_Result<T, n> LU( Mat<T, n, n> mat )
+template <typename T, typename Impl, MatDim n, MatDim m>
+LU_Result<T, n> LU( const MatFacade<Impl, T, n, m>& mat )
 {
-    auto L = Mat<T, n, n>::Identity();
+    static_assert( n == m );
+    assert( mat.rows() == mat.cols() );
+    auto L = Mat<T, n, n>::Identity( mat.rows(), mat.cols() );
+    Mat<T, n, n> U = mat;
 
-    for ( Index k = 0; k < n; ++k )
+    for ( Index k = 0; k < mat.rows(); ++k )
     {
-        for ( Index j = k + 1; j < n; ++j )
+        for ( Index j = k + 1; j < mat.rows(); ++j )
         {
-            const T alpha = -mat( j, k ) / mat( k, k );
+            const T alpha = -U( j, k ) / U( k, k );
             L( j, k ) = -alpha;
 
-            for ( Index i = 0; i < n; ++i )
-                mat( j, i ) = mat( j, i ) + alpha * mat( k, i );
+            for ( Index i = k; i < mat.rows(); ++i )
+                U( j, i ) = U( j, i ) + alpha * U( k, i );
         }
     }
 
-    return { L, mat };
+    return { L, U };
 }
 
 
-template <typename T, Index n>
+template <typename T, MatDim n>
 struct PLUQ_Result
 {
     Mat<T, n, n> P, L, U, Q;
 };
 
-template <typename T, Index n>
-PLUQ_Result<T, n> PLUQ( Mat<T, n, n> mat )
+template <typename T, typename Impl, MatDim n, MatDim m>
+PLUQ_Result<T, n> PLUQ( const MatFacade<Impl, T, n, m>& matOrig )
 {
+    static_assert( n == m );
+    assert( matOrig.rows() == matOrig.cols() );
     using TM = Mat<T, n, n>;
+    TM U = matOrig;
 
-    auto argmax = [&mat] ( Index k0 )
+    auto argmax = [&U] ( Index k0 )
     {
-        typename TM::Coord ret;
+        std::pair<Index, Index> ret;
         T val = std::numeric_limits<T>::min();
-        for ( Index row = k0; row < n; ++row )
+        for ( Index row = k0; row < U.rows(); ++row )
         {
-            for ( Index col = k0; col < n; ++col )
+            for ( Index col = k0; col < U.rows(); ++col )
             {
-                if ( mat( row, col ) > val )
+                if ( U( row, col ) > val )
                 {
-                    val = mat( row, col );
+                    val = U( row, col );
                     ret = { row, col };
                 }
             }
@@ -63,20 +74,20 @@ PLUQ_Result<T, n> PLUQ( Mat<T, n, n> mat )
         return ret;
     };
 
-    TM P = TM::Identity();
-    TM L = TM::Identity();
-    TM Q = TM::Identity();
+    TM P = TM::Identity( matOrig.rows(), matOrig.cols() );
+    TM L = P;
+    TM Q = P;
 
-    for ( Index k = 0; k < n - 1; ++k )
+    for ( Index k = 0; k < matOrig.rows() - 1; ++k )
     {
-        // find the max element in the submatrix
+        // find the max element in the subUrix
         auto [mxrow, mxcol] = argmax( k );
 
-        // swap cols and rows in the original matrix, so that mat(k, k) is the max element
-        mat.swapCols( k, mxcol );
-        mat.swapRows( k, mxrow );
+        // swap cols and rows in the original U, so that U(k, k) is the max element
+        U.swapCols( k, mxcol );
+        U.swapRows( k, mxrow );
 
-        // compensate for swapping in the original matrix, by swapping surroundings
+        // compensate for swapping in the original U by swapping surroundings
         // Remember that:
         // - multiplying on the right == swapping cols and
         // - multiplying on the left == swapping rows
@@ -88,15 +99,17 @@ PLUQ_Result<T, n> PLUQ( Mat<T, n, n> mat )
         P.swapCols( k, mxrow );
 
 
-        for ( Index j = k + 1; j < n; ++j )
+        for ( Index j = k + 1; j < matOrig.rows(); ++j )
         {
-            const T alpha = -mat( j, k ) / mat( k, k );
+            const T alpha = -U( j, k ) / U( k, k );
             L( j, k ) = -alpha;
 
-            for ( Index i = 0; i < n; ++i )
-                mat( j, i ) = mat( j, i ) + alpha * mat( k, i );
+            for ( Index i = 0; i < matOrig.rows(); ++i )
+                U( j, i ) = U( j, i ) + alpha * U( k, i );
         }
     }
 
-    return { P, L, mat, Q };
+    return { P, L, U, Q };
+}
+
 }

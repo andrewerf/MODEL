@@ -3,7 +3,10 @@
 #include <cassert>
 #include "Mat.hpp"
 #include "LU.hpp"
+#include "io.hpp"
 
+
+using namespace M;
 
 int main()
 {
@@ -29,18 +32,13 @@ int main()
     mat( 3, 3 ) = 1;
 
     auto [P, L, U, Q] = PLUQ( mat );
-    print( P );
-    std::cout << '\n';
-    print( L );
-    std::cout << '\n';
-    print( U );
-    std::cout << '\n';
-    print( Q );
-    std::cout << '\n';
+    std::cout << P << '\n';
+    std::cout << L << '\n';
+    std::cout << U << '\n';
+    std::cout << Q << '\n';
 
     auto check = P * L * U * Q;
-    print( check );
-    std::cout << '\n';
+    std::cout << check << '\n';
 
     return 0;
 }
