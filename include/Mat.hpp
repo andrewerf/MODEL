@@ -169,6 +169,33 @@ struct Mat : public MatFacade<Mat<T, n, m>, T, n, m>
                 (*this)( i, j ) = other( i, j );
     }
 
+    /// Nested initializer list constructor
+    /// @tparam cols_ Pack of sizes of rows of the matrix. Each element in the pack must be equal to m (enforced by types)
+    /// @param init Pack of initializer lists, containing rows of the matrix being constructed
+    /// For example, this code produces a 3x3 matrix, with rows {1, 2, 3}, {4, 5, 6} and {7, 8, 9} respectively.
+    /// ```
+    ///     Mat<int, 3, 3> mat{
+    ///        { 1, 2, 3 },
+    ///        { 4, 5, 6 },
+    ///        { 7, 8, 9 }
+    ///    };
+    /// ```
+    template <Index ...cols_>
+        requires ( !n.dynamic && !m.dynamic )
+    constexpr Mat( const ElemT (&...init)[cols_] )
+    {
+        static_assert( sizeof...( cols_ ) == n );
+        static_assert( ( ( cols_ == m ) && ... ) );
+        a.resize( rows() * cols() );
+        Index i = 0;
+        auto fillRow = [this, &i] ( auto row ) {
+            for ( Index j = 0; j < cols(); ++j )
+                (*this)( i, j ) = row[j];
+            ++i;
+        };
+        ( fillRow( init ) , ... );
+    }
+
     static Mat Identity( Index rows, Index cols )
         requires ( m == n )
     {

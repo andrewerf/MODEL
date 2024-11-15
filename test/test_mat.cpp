@@ -47,6 +47,23 @@ TEST(Mat, MixedCreationAndIndexing) {
     EXPECT_EQ(matrix(2, 3), 42);
 }
 
+TEST(Mat, InitializerListCreation) {
+    Mat<int, 3, 3> mat{
+        { 1, 2, 3 },
+        { 4, 5, 6 },
+        { 7, 8, 9 }
+    };
+
+    int k = 0;
+    for ( Index i = 0; i < 3; ++i )
+        for ( Index j = 0; j < 3; ++j )
+            EXPECT_EQ( mat( i, j ), (++k) );
+
+//    Mat<int, 1, 2> mat2{
+//        { 1, 2, 3 }
+//    };
+}
+
 TEST(Mat, Addition) {
     using namespace M;
     using MatrixType = Mat<int, MatDim(3), MatDim(4)>;
