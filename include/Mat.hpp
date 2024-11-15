@@ -58,13 +58,18 @@ constexpr MatDim DynamicMatDim;
 
 /// Everything we need from the implementation of a Matrix
 template <typename Mat>
-concept MatImplC = requires( Mat mat, Index i, Index j )
+concept MatImplC = requires( Mat mat, const Mat& cmat, Index i, Index j )
 {
     typename Mat::ElemT;
     requires ( !std::is_reference_v<typename Mat::ElemT> );
-    { mat( i, j ) } -> std::convertible_to<typename Mat::ElemT>;
+    { mat( i, j ) } -> std::same_as<typename Mat::ElemT&>;
+    { cmat( i, j ) } -> std::same_as<const typename Mat::ElemT&>;
 };
 
+
+// forward-declare MatView to use it in `submatrix` method of the facade
+template <typename BaseT_, typename T, MatDim n, MatDim m>
+class MatView;
 
 /// A base class for the static polymorphism based on CRTP. Represents the interface of a matrix.
 template <typename Impl_, typename ElemT_, MatDim n, MatDim m>
@@ -85,6 +90,46 @@ public:
         { return impl()( i, j ); }
     constexpr const ElemT& operator() ( Index i, Index j ) const
         { return impl()( i, j ); }
+
+
+    /// @brief Get submatrix view of the statically known size
+    /// @note This method does not involve copying of elements
+    /// @tparam nrows Number of rows
+    /// @tparam ncols Number of columns
+    /// @param r1 Index of the first row of the submatrix in the matrix
+    /// @param c1 Index of the first column of the submatrix in the matrix
+    template <MatDim nrows, MatDim ncols>
+        requires ( !nrows.dynamic && !ncols.dynamic )
+    constexpr MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>
+        submatrix( Index r1, Index c1 )
+    {
+        static_assert( nrows <= n );
+        static_assert( ncols <= m );
+        assert( r1 >= 0 );
+        assert( c1 >= 0 );
+        assert( nrows.val + r1 <= rows() );
+        assert( ncols.val + c1 <= cols() );
+        return MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>( *this, r1, c1 );
+    }
+
+    /// @brief Get submatrix view of the dynamically known size
+    /// @note This method does not involve copying of elements
+    /// @param r1 Index of the first row of the submatrix in the matrix
+    /// @param c1 Index of the first column of the submatrix in the matrix
+    /// @param nrows_ Number of rows
+    /// @param ncols_ Number of columns
+    template <MatDim nrows = DynamicMatDim, MatDim ncols = DynamicMatDim>
+    constexpr MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>
+        submatrix( Index r1, Index c1, Index nrows_, Index ncols_ )
+    {
+        static_assert( nrows <= n );
+        static_assert( ncols <= m );
+        assert( r1 >= 0 );
+        assert( c1 >= 0 );
+        assert( nrows_ + r1 < rows() );
+        assert( ncols_ + c1 < cols() );
+        return MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>( *this, r1, c1, nrows_, ncols_ );
+    }
 
 
     constexpr Index rows() const
