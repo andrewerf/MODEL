@@ -87,3 +87,28 @@ TEST(MatView, ConstAccess) {
     EXPECT_EQ( &view(2, 1), &matrix(2, 1) );
     EXPECT_EQ( &view(1, 2), &matrix(1, 2) );
 }
+
+
+TEST(MatView, Addition) {
+    Mat<int, 3, 3> mat{
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9}
+    };
+    auto submat = mat.submatrix( 1, 1, 2, 2 );
+
+    EXPECT_EQ( submat.rows(), 2 );
+    EXPECT_EQ( submat.cols(), 2 );
+
+    Mat<int, 2, 2> other{
+        {10, 15},
+        {20, 25}
+    };
+    submat = submat + other;
+
+    // check modification of the original matrix
+    EXPECT_EQ(mat(1, 1), 15);
+    EXPECT_EQ(mat(1, 2), 21);
+    EXPECT_EQ(mat(2, 1), 28);
+    EXPECT_EQ(mat(2, 2), 34);
+}

@@ -59,6 +59,19 @@ public:
         static_assert( n <= n1 && m <= m1 );
     }
 
+    template <typename Impl, MatDim n1, MatDim m1>
+    MatView& operator=( const MatFacade<Impl, T, n1, m1>& other )
+    {
+        static_assert( n1 == n );
+        static_assert( m1 == m );
+        assert( other.rows() == rows() );
+        assert( other.cols() == cols() );
+        for ( Index i = 0; i < rows(); ++i )
+            for ( Index j = 0; j < cols(); ++j )
+                (*this)( i, j ) = other( i, j );
+        return *this;
+    }
+
 
     constexpr T& operator() ( Index i, Index j )
         { return base_( i + r1, j + c1 ); }
