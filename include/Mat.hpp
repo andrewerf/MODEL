@@ -126,8 +126,8 @@ public:
         static_assert( ncols <= m );
         assert( r1 >= 0 );
         assert( c1 >= 0 );
-        assert( nrows_ + r1 < rows() );
-        assert( ncols_ + c1 < cols() );
+        assert( nrows_ + r1 <= rows() );
+        assert( ncols_ + c1 <= cols() );
         return MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>( *this, r1, c1, nrows_, ncols_ );
     }
 
