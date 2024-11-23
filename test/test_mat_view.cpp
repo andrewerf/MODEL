@@ -57,6 +57,35 @@ TEST(MatView, ConstructionFromMatView) {
     EXPECT_EQ( &view2( 1, 0 ), &matrix( 2, 2 ) );
 }
 
+TEST(MatView, ConstructionFromMatViewConst) {
+    const Mat<int, 4, 4> matrix = {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}};
+    const auto view = matrix.submatrix<3, 3>( 1, 1 );
+    const auto view2 = view.submatrix<2, 1>( 0, 1 );
+
+    EXPECT_EQ( &view2( 0, 0 ), &matrix( 1, 2 ) );
+    EXPECT_EQ( &view2( 1, 0 ), &matrix( 2, 2 ) );
+}
+
+TEST(MatView, ConstructionFromMatView2) {
+    Mat<int, 4, 4> matrix = {{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}};
+    auto view = matrix.submatrix<3, 3>( 1, 1 );
+
+    auto g = [] <typename Impl, typename T, MatDim n, MatDim m> ( MatFacade<Impl, T, n, m>& o )
+    {
+        return o.template submatrix<2, 1>( 0, 0 );
+    };
+
+    auto view2 = view.submatrix<2, 1>( 0, 1 );
+    auto view3 = g( view2 );
+
+    // check that MatView does not nest
+    static_assert( std::same_as<decltype( view2 )::BaseT::Impl, decltype( matrix )> );
+    static_assert( std::same_as<decltype( view3 )::BaseT::Impl, decltype( matrix )> );
+
+    EXPECT_EQ( &view2( 0, 0 ), &matrix( 1, 2 ) );
+    EXPECT_EQ( &view2( 1, 0 ), &matrix( 2, 2 ) );
+}
+
 
 TEST(MatView, SwapColumns) {
     // Test swapping columns
