@@ -77,6 +77,30 @@ class MatFacade
 {
 protected:
     Index rowsDynamic_, colsDynamic_;
+
+    template <MatDim nrows, MatDim ncols>
+        requires ( !nrows.dynamic && !ncols.dynamic )
+    void checkSubmatrixInvariants( Index r1, Index c1 ) const
+    {
+        static_assert( nrows <= n );
+        static_assert( ncols <= m );
+        assert( r1 >= 0 );
+        assert( c1 >= 0 );
+        assert( nrows.val + r1 <= rows() );
+        assert( ncols.val + c1 <= cols() );
+    }
+    template <MatDim nrows, MatDim ncols>
+    void checkSubmatrixInvariants( Index r1, Index c1, Index nrows_, Index ncols_ ) const
+    {
+        static_assert( nrows <= n );
+        static_assert( ncols <= m );
+        assert( r1 >= 0 );
+        assert( c1 >= 0 );
+        assert( nrows_ + r1 <= rows() );
+        assert( ncols_ + c1 <= cols() );
+    }
+
+
 public:
     using ElemT = ElemT_;
     using Impl = Impl_;
@@ -100,16 +124,27 @@ public:
     /// @param c1 Index of the first column of the submatrix in the matrix
     template <MatDim nrows, MatDim ncols>
         requires ( !nrows.dynamic && !ncols.dynamic )
-    constexpr MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>
-        submatrix( Index r1, Index c1 )
+    constexpr auto submatrix( Index r1, Index c1 )
     {
-        static_assert( nrows <= n );
-        static_assert( ncols <= m );
-        assert( r1 >= 0 );
-        assert( c1 >= 0 );
-        assert( nrows.val + r1 <= rows() );
-        assert( ncols.val + c1 <= cols() );
-        return MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>( *this, r1, c1 );
+        if constexpr ( requires { impl().template submatrix<nrows, ncols>( r1, c1 ); } )
+            return impl().template submatrix<nrows, ncols>( r1, c1 );
+        else
+        {
+            checkSubmatrixInvariants<nrows, ncols>( r1, c1 );
+            return MatView<Impl_, ElemT, nrows, ncols>( *this, r1, c1 );
+        }
+    }
+    template <MatDim nrows, MatDim ncols>
+        requires ( !nrows.dynamic && !ncols.dynamic )
+    constexpr auto submatrix( Index r1, Index c1 ) const
+    {
+        if constexpr ( requires { impl().template submatrix<nrows, ncols>( r1, c1 ); } )
+            return impl().template submatrix<nrows, ncols>( r1, c1 );
+        else
+        {
+            checkSubmatrixInvariants<nrows, ncols>( r1, c1 );
+            return MatView<const Impl_, ElemT, nrows, ncols>( *this, r1, c1 );
+        }
     }
 
     /// @brief Get submatrix view of the dynamically known size
@@ -119,25 +154,27 @@ public:
     /// @param nrows_ Number of rows
     /// @param ncols_ Number of columns
     template <MatDim nrows = DynamicMatDim, MatDim ncols = DynamicMatDim>
-    constexpr MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>
-        submatrix( Index r1, Index c1, Index nrows_, Index ncols_ )
+    constexpr auto submatrix( Index r1, Index c1, Index nrows_, Index ncols_ )
     {
-        static_assert( nrows <= n );
-        static_assert( ncols <= m );
-        assert( r1 >= 0 );
-        assert( c1 >= 0 );
-        assert( nrows_ + r1 <= rows() );
-        assert( ncols_ + c1 <= cols() );
-        return MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>( *this, r1, c1, nrows_, ncols_ );
+        if constexpr ( requires { impl().template submatrix<nrows, ncols>( r1, c1, nrows_, ncols_ ); } )
+            return impl().template submatrix<nrows, ncols>( r1, c1, nrows_, ncols_ );
+        else
+        {
+            checkSubmatrixInvariants<nrows, ncols>( r1, c1, nrows_, ncols_ );
+            return MatView<Impl_, ElemT, nrows, ncols>( *this, r1, c1, nrows_, ncols_ );
+        }
     }
-
-    constexpr MatFacade<Impl, ElemT, n, m> operator-()
+    /// Same as above but for constant view
+    template <MatDim nrows = DynamicMatDim, MatDim ncols = DynamicMatDim>
+    constexpr auto submatrix( Index r1, Index c1, Index nrows_, Index ncols_ ) const
     {
-        MatFacade<Impl, ElemT, n, m> ret( rows(), cols() );
-        for ( Index i = 0; i < rows(); ++i )
-            for ( Index j = 0; j < cols(); ++j )
-                ret( i, j ) = -(*this)( i, j );
-        return ret;
+        if constexpr ( requires { impl().template submatrix<nrows, ncols>( r1, c1, nrows_, ncols_ ); } )
+            return impl().template submatrix<nrows, ncols>( r1, c1, nrows_, ncols_ );
+        else
+        {
+            checkSubmatrixInvariants<nrows, ncols>( r1, c1, nrows_, ncols_ );
+            return MatView<const Impl_, ElemT, nrows, ncols>( *this, r1, c1, nrows_, ncols_ );
+        }
     }
 
 
@@ -398,6 +435,13 @@ Mat<T, n, m> operator-( T val, const MatFacade<Impl, T, n, m>& a )
             ret( i, j ) = val - a( i, j );
     return ret;
 }
+
+template <typename T, typename Impl, MatDim n, MatDim m>
+constexpr Mat<T, n, m> operator-( const MatFacade<Impl, T, n, m>& x )
+{
+    return T( 0 ) - x;
+}
+
 
 
 template <typename T, typename Impl, MatDim n, MatDim m>
