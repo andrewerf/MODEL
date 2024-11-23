@@ -131,6 +131,15 @@ public:
         return MatView<MatFacade<Impl_, ElemT, n, m>, ElemT, nrows, ncols>( *this, r1, c1, nrows_, ncols_ );
     }
 
+    constexpr MatFacade<Impl, ElemT, n, m> operator-()
+    {
+        MatFacade<Impl, ElemT, n, m> ret( rows(), cols() );
+        for ( Index i = 0; i < rows(); ++i )
+            for ( Index j = 0; j < cols(); ++j )
+                ret( i, j ) = -(*this)( i, j );
+        return ret;
+    }
+
 
     constexpr Index rows() const
     {
@@ -296,6 +305,22 @@ void sumImpl( const MatA& a, const MatB& b, MatC& c )
     }
 }
 
+template <typename MatA, typename MatB, typename MatC>
+void subImpl( const MatA& a, const MatB& b, MatC& c )
+{
+    assert( a.cols() == b.cols() );
+    assert( a.rows() == b.rows() );
+    assert( a.cols() == c.cols() );
+    assert( a.rows() == c.rows() );
+    for ( Index i = 0; i < a.rows(); ++i )
+    {
+        for ( Index j = 0; j < a.cols(); ++j )
+        {
+            c( i, j ) = a( i, j ) - b( i, j );
+        }
+    }
+}
+
 }
 
 
@@ -321,6 +346,19 @@ Mat<T, n1, m1> operator+( const MatFacade<Impl1, T, n1, m1>& a, const MatFacade<
     detail::sumImpl( a, b, ret );
     return ret;
 }
+
+template <typename T,
+        typename Impl1, MatDim n1, MatDim m1,
+        typename Impl2, MatDim n2, MatDim m2>
+Mat<T, n1, m1> operator-( const MatFacade<Impl1, T, n1, m1>& a, const MatFacade<Impl2, T, n2, m2>& b )
+{
+    static_assert( n1 == n2 );
+    static_assert( m1 == m2 );
+    Mat<T, n1, m1> ret( a.rows(), a.cols() );
+    detail::subImpl( a, b, ret );
+    return ret;
+}
+
 
 
 template <typename T, typename Impl, MatDim n, MatDim m>
