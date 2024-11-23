@@ -1,4 +1,4 @@
-add_executable(test_all test_mat.cpp test_lu.cpp test_mat_view.cpp)
+add_executable(test_all test_mat.cpp test_lu.cpp test_mat_view.cpp test_strassen_inversion.cpp)
 target_link_libraries(test_all GTest::gtest_main)
 
 find_package(GTest)
