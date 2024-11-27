@@ -91,7 +91,7 @@ TEST(LU, LUBasicProperties) {
 
         // Test that A = L * U
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A));
+        EXPECT_TRUE(isMatrixNear(product, A));
     }
 
     // 3x3 matrix test
@@ -118,7 +118,7 @@ TEST(LU, LUBasicProperties) {
 
         // Test A = L * U
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A));
+        EXPECT_TRUE(isMatrixNear(product, A));
     }
 }
 
@@ -130,9 +130,9 @@ TEST(LU, LUSpecialCases) {
         auto result = LU(I);
 
         // L should be identity
-        EXPECT_TRUE(matrix_near(result.L, I));
+        EXPECT_TRUE(isMatrixNear(result.L, I));
         // U should be identity
-        EXPECT_TRUE(matrix_near(result.U, I));
+        EXPECT_TRUE(isMatrixNear(result.U, I));
     }
 
     // Upper triangular matrix
@@ -146,9 +146,9 @@ TEST(LU, LUSpecialCases) {
 
         // L should be identity
         auto I = Mat<double, 3, 3>::Identity(3, 3);
-        EXPECT_TRUE(matrix_near(result.L, I));
+        EXPECT_TRUE(isMatrixNear(result.L, I));
         // U should be the original matrix
-        EXPECT_TRUE(matrix_near(result.U, A));
+        EXPECT_TRUE(isMatrixNear(result.U, A));
     }
 
     // Lower triangular matrix
@@ -162,7 +162,7 @@ TEST(LU, LUSpecialCases) {
 
         // Test A = L * U
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A));
+        EXPECT_TRUE(isMatrixNear(product, A));
     }
 }
 
@@ -178,7 +178,7 @@ TEST(LU, LUNumericalStability) {
 
     // Test A = L * U with larger epsilon due to numerical instability
     auto product = result.L * result.U;
-    EXPECT_TRUE(matrix_near(product, A, 1e-5));
+    EXPECT_TRUE(isMatrixNear(product, A, 1e-5));
 }
 
 
@@ -192,7 +192,7 @@ TEST(LU, LUDifferentTypes) {
 
         auto result = LU(A);
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A, 1e-6f));
+        EXPECT_TRUE(isMatrixNear(product, A, 1e-6f));
     }
 
     // Test with double
@@ -203,7 +203,7 @@ TEST(LU, LUDifferentTypes) {
 
         auto result = LU(A);
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A, 1e-10));
+        EXPECT_TRUE(isMatrixNear(product, A, 1e-10));
     }
 }
 

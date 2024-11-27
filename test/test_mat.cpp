@@ -4,9 +4,7 @@
 #include <gtest/gtest.h>
 #include <Mat.hpp>
 
-
 using namespace M;
-
 
 TEST(Mat, StaticCreationAndIndexing) {
     Mat<int, 3, 4> matrix;
