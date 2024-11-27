@@ -22,7 +22,7 @@ class TestStrassenMultiplication :
     public ::testing::TestWithParam<MatrixProductSize> {
 };
 
-TEST_P(TestStrassenMultiplication, CompareWithNaiveProduct) {
+TEST_P(TestStrassenMultiplication, CompareWithNaiveMultiplication) {
     auto [m, n, p] = GetParam();
     auto a = generateRandomMatrix(m, n);
     auto b = generateRandomMatrix(n, p);
@@ -35,10 +35,10 @@ const MatrixProductSize kTestSizes[] = {
     { 3, 4, 5 },
     { 30, 40, 50 },
     { 100, 100, 100 },
-    { 256, 64, 32 },
-    { 64, 32, 256 },
-    { 64, 128, 64 },
-    { 128, 64, 128 },
+    { 257, 65, 33 },
+    { 65, 33, 257 },
+    { 65, 129, 65 },
+    { 129, 65, 129 },
 };
 
 INSTANTIATE_TEST_SUITE_P(
@@ -46,17 +46,44 @@ INSTANTIATE_TEST_SUITE_P(
     TestStrassenMultiplication,
     testing::ValuesIn(kTestSizes));
 
-TEST(BenchMarkStrassenMultiplication, FixedSize) {
-    Index n = 2300;
+TEST(BenchmarkStrassenMultiplication, SquareSize) {
+    // 1.5s
+    Index n = 2222;
     auto a = generateRandomMatrix(n, n);
     auto b = generateRandomMatrix(n, n);
     auto c = multiplyStrassen(a, b);
 }
 
-/*TEST(BenchMarkStrassenMultiplication, SkinnyMatrix) {
-    auto a = generateRandomMatrix(600, 10000);
-    auto b = generateRandomMatrix(10000, 600);
+// The following test cases were used during development to validate the
+// splitting of wide or tall matrices into squarish blocks in multiplySubmatrix
+// and to set the constants kInnerSplitRatio and kOuterSplitRatio
+
+TEST(BenchmarkStrassenMultiplicationSplitStrategy, WideA) {
+    // 1.9s without split, 1.1s with split in multiplySubmatrix
+    auto a = generateRandomMatrix(500, 4000);
+    auto b = generateRandomMatrix(4000, 4000);
     auto c = multiplyStrassen(a, b);
-}*/
+}
+
+TEST(BenchmarkStrassenMultiplicationSplitStrategy, TallB) {
+    // 1.9s without split, 1.1s with split in multiplySubmatrix
+    auto a = generateRandomMatrix(4000, 4000);
+    auto b = generateRandomMatrix(4000, 500);
+    auto c = multiplyStrassen(a, b);
+}
+
+TEST(BenchmarkStrassenMultiplicationSplitStrategy, TallAWideB) {
+    // Split optimization has no impact - 1.5s in both cases.
+    auto a = generateRandomMatrix(4000, 800);
+    auto b = generateRandomMatrix(800, 4000);
+    auto c = multiplyStrassen(a, b);
+}
+
+TEST(BenchmarkStrassenMultiplicationSplitStrategy, TallBWideA) {
+    // 1.2s without split, 0.8s with split.
+    auto a = generateRandomMatrix(800, 8000);
+    auto b = generateRandomMatrix(8000, 800);
+    auto c = multiplyStrassen(a, b);
+}
 
 }  // namespace
