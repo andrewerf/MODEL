@@ -6,11 +6,11 @@
 //
 // Utility functions for comparing matrices in unit tests.
 
-#include <random>
+#include <Mat.hpp>
 
 #include <gtest/gtest.h>
 
-#include <Mat.hpp>
+#include <random>
 
 namespace M
 {
@@ -64,5 +64,19 @@ Mat<T> generateRandomMatrix(Index m, Index n) {
     fillWithRandomValues(a);
     return a;
 }
+
+// A functor used by the GTest library to nicely print the matrix size
+// instantiated in parametric tests.
+struct ProductSizeToString {
+
+template <typename T>
+std::string operator()(const ::testing::TestParamInfo<T>& info) const {
+    ::std::stringstream ss;
+    auto [m, n, p] = info.param;
+    ss << m << "x" << n << "_" << n << "x" << p;
+    return ss.str();
+}
+
+};
 
 }

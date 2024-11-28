@@ -12,3 +12,8 @@ if( NOT GTest_FOUND )
 endif ()
 include(GoogleTest)
 gtest_discover_tests(test_all)
+
+# To compile the code making comparisons with BLAS (MacOS only for now)
+if ( ${APPLE} )
+    target_link_libraries(test_all "-framework Accelerate")
+endif ()
