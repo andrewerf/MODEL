@@ -88,9 +88,6 @@ enum OpMode {
 // Perform the operation C <- A x B or C <- C + A x B on a submatrix (view).
 // This will be called when the Strassen iterations has divided the
 // multiplication problem into small enough matrices.
-//
-// The dimensions of A, B and C can be passed at compile time through the
-// m_, n_, p_ arguments. If not, the generated code handles any size.
 template<
     OpMode op=OVERWRITE,
     typename SubmatrixC,

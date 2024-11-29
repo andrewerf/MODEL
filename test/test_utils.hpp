@@ -49,7 +49,7 @@ template<typename T, typename Impl, MatDim m, MatDim n>
 void fillWithRandomValues(MatFacade<Impl, T, m, n>& a) {
     std::random_device random_device;
     std::mt19937 generator(random_device());
-    std::uniform_real_distribution<> distribution(0.0, 1.0);
+    std::uniform_real_distribution<> distribution(-1.0, 1.0);
     for ( Index i = 0; i < a.rows(); ++i ) {
         for ( Index j = 0; j < a.cols(); ++j ) {
             a( i, j ) = distribution(generator);
