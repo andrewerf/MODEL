@@ -93,7 +93,6 @@ enum OpMode {
 // m_, n_, p_ arguments. If not, the generated code handles any size.
 template<
     OpMode op=OVERWRITE,
-    Index m_=-1, Index n_=-1, Index p_=-1,
     typename SubmatrixC,
     typename SubmatrixA,
     typename SubmatrixB>
@@ -101,9 +100,9 @@ void multiplySubmatrixLeaf(
         SubmatrixC& c,
         const SubmatrixA& a,
         const SubmatrixB& b) {
-    auto m = m_ == -1 ? a.rows() : m_;
-    auto n = n_ == -1 ? a.cols() : n_;
-    auto p = p_ == -1 ? b.cols() : p_;
+    Index m = a.rows();
+    Index n = a.cols();
+    Index p = b.cols();
 
     assert(b.rows() == n);
     assert(c.rows() == m && c.cols() == p);
@@ -282,7 +281,10 @@ void multiplySubmatrixSquare(
         if (m == min_size && n == min_size && p == min_size) {
             // Use a specialization of multiplySubmatrixLeaf when the
             // dimensions are exactly those of the ideal leaf size.
-            multiplySubmatrixLeaf<op, min_size, min_size, min_size>(c, a, b);
+            auto a_ = a.template submatrix<min_size, min_size>(0, 0);
+            auto b_ = b.template submatrix<min_size, min_size>(0, 0);
+            auto c_ = c.template submatrix<min_size, min_size>(0, 0);
+            multiplySubmatrixLeaf<op>(c_, a_, b_);
         } else {
             multiplySubmatrixLeaf<op>(c, a, b);
         }
@@ -453,7 +455,7 @@ template <
     typename T,
     typename ImplA, MatDim m, MatDim n_a,
     typename ImplB, MatDim n_b, MatDim p,
-    Index min_size=16,
+    Index min_size=8,
     typename SplitPolicy=PowerOfTwoSplitPolicy>
 Mat<T, m, p> multiplyStrassen(
         const MatFacade<ImplA, T, m, n_a>& a,
