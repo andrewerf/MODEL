@@ -44,27 +44,6 @@ void EXPECT_MATRIX_NEAR(const Mat<T>& a, const Mat<T>& b, T atol = 1e-8) {
     }
 }
 
-// Fill a random matrix with uniformly distributed values in the range [-1, 1]
-template<typename T, typename Impl, MatDim m, MatDim n>
-void fillWithRandomValues(MatFacade<Impl, T, m, n>& a) {
-    std::random_device random_device;
-    std::mt19937 generator(random_device());
-    std::uniform_real_distribution<> distribution(-1.0, 1.0);
-    for ( Index i = 0; i < a.rows(); ++i ) {
-        for ( Index j = 0; j < a.cols(); ++j ) {
-            a( i, j ) = distribution(generator);
-        }
-    }
-}
-
-// Create a random matrix of size (m, n).
-template<typename T=double>
-Mat<T> generateRandomMatrix(Index m, Index n) {
-    Mat<T> a(m, n);
-    fillWithRandomValues(a);
-    return a;
-}
-
 // A functor used by the GTest library to nicely print the matrix size
 // instantiated in parametric tests.
 struct ProductSizeToString {
