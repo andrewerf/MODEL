@@ -8,8 +8,13 @@ if( NOT GTest_FOUND )
     set_target_properties(gtest_main PROPERTIES FOLDER extern)
 endif ()
 
-add_executable(test_all test_mat.cpp test_lu.cpp test_mat_view.cpp test_strassen_inversion.cpp)
+add_executable(test_all test_mat.cpp test_lu.cpp test_mat_view.cpp test_strassen_inversion.cpp test_strassen_multiplication.cpp)
 target_link_libraries(test_all GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(test_all)
+
+# To compile the code making comparisons with BLAS (MacOS only for now)
+if ( ${APPLE} )
+    target_link_libraries(test_all "-framework Accelerate")
+endif ()

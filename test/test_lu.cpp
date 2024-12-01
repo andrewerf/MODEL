@@ -2,25 +2,12 @@
 #include <Mat.hpp>
 #include <LU.hpp>
 
+#include "test_utils.hpp"
 
 using namespace M;
 
 namespace
 {
-
-// Helper function to check if two matrices are approximately equal
-template<typename T, typename Impl1, typename Impl2, MatDim n, MatDim m>
-bool matrix_near(const MatFacade<Impl1, T, n, m>& a,
-                 const MatFacade<Impl2, T, n, m>& b,
-                 T epsilon = 1e-10) {
-    if (a.rows() != b.rows() || a.cols() != b.cols()) return false;
-
-    for (Index i = 0; i < a.rows(); ++i)
-        for (Index j = 0; j < a.cols(); ++j)
-            if (std::abs(a(i, j) - b(i, j)) > epsilon)
-                return false;
-    return true;
-}
 
 // Helper function to check if a matrix is lower triangular
 template<typename T, MatDim n>
@@ -104,7 +91,7 @@ TEST(LU, LUBasicProperties) {
 
         // Test that A = L * U
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A));
+        EXPECT_TRUE(isMatrixNear(product, A));
     }
 
     // 3x3 matrix test
@@ -131,7 +118,7 @@ TEST(LU, LUBasicProperties) {
 
         // Test A = L * U
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A));
+        EXPECT_TRUE(isMatrixNear(product, A));
     }
 }
 
@@ -143,9 +130,9 @@ TEST(LU, LUSpecialCases) {
         auto result = LU(I);
 
         // L should be identity
-        EXPECT_TRUE(matrix_near(result.L, I));
+        EXPECT_TRUE(isMatrixNear(result.L, I));
         // U should be identity
-        EXPECT_TRUE(matrix_near(result.U, I));
+        EXPECT_TRUE(isMatrixNear(result.U, I));
     }
 
     // Upper triangular matrix
@@ -159,9 +146,9 @@ TEST(LU, LUSpecialCases) {
 
         // L should be identity
         auto I = Mat<double, 3, 3>::Identity(3, 3);
-        EXPECT_TRUE(matrix_near(result.L, I));
+        EXPECT_TRUE(isMatrixNear(result.L, I));
         // U should be the original matrix
-        EXPECT_TRUE(matrix_near(result.U, A));
+        EXPECT_TRUE(isMatrixNear(result.U, A));
     }
 
     // Lower triangular matrix
@@ -175,7 +162,7 @@ TEST(LU, LUSpecialCases) {
 
         // Test A = L * U
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A));
+        EXPECT_TRUE(isMatrixNear(product, A));
     }
 }
 
@@ -191,7 +178,7 @@ TEST(LU, LUNumericalStability) {
 
     // Test A = L * U with larger epsilon due to numerical instability
     auto product = result.L * result.U;
-    EXPECT_TRUE(matrix_near(product, A, 1e-5));
+    EXPECT_TRUE(isMatrixNear(product, A, 1e-5));
 }
 
 
@@ -205,7 +192,7 @@ TEST(LU, LUDifferentTypes) {
 
         auto result = LU(A);
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A, 1e-6f));
+        EXPECT_TRUE(isMatrixNear(product, A, 1e-6f));
     }
 
     // Test with double
@@ -216,7 +203,7 @@ TEST(LU, LUDifferentTypes) {
 
         auto result = LU(A);
         auto product = result.L * result.U;
-        EXPECT_TRUE(matrix_near(product, A, 1e-10));
+        EXPECT_TRUE(isMatrixNear(product, A, 1e-10));
     }
 }
 
