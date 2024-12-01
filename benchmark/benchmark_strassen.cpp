@@ -2,6 +2,7 @@
 #include <StrassenMultiplication.hpp>
 #include <random.hpp>
 #include <benchmark/benchmark.h>
+#include <exception>
 
 
 using namespace M;
