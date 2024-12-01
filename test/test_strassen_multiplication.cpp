@@ -7,7 +7,7 @@
 // Unit tests for Strassen Multiplication.
 
 // #include <BLASMultiplication.hpp>
-#include <io.hpp>
+#include <random.hpp>
 #include <StrassenMultiplication.hpp>
 
 // #include "MiniBenchmark.hpp"

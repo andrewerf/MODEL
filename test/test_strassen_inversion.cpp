@@ -2,9 +2,7 @@
 // Created by Andrey Aralov on 11/23/24.
 //
 
-#include <random>
-
-#include <io.hpp>
+#include <random.hpp>
 #include <StrassenInversion.hpp>
 
 #include "test_utils.hpp"
