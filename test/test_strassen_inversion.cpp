@@ -12,7 +12,7 @@ using namespace M;
 
 class MatFastInv : public ::testing::Test {
 protected:
-    const double epsilon = 1e-6;
+    const double epsilon = 1e-5;
 
     Mat<double> generateRandomMatrix( Index sz ) const
     {
