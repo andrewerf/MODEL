@@ -2,8 +2,8 @@
 // Created by Andrey Aralov on 11/23/24.
 //
 #include <gtest/gtest.h>
-#include <random>
 #include <StrassenInversion.hpp>
+#include <random.hpp>
 #include <io.hpp>
 
 
@@ -16,19 +16,7 @@ protected:
 
     Mat<double> generateRandomMatrix( Index sz ) const
     {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis( -1.0, 1.0 );
-
-        Mat<double> m( sz, sz );
-
-        for ( Index i = 0; i < sz; ++i ) {
-            for ( Index j = 0; j < sz; ++j ) {
-                m( i, j ) = dis( gen );
-            }
-        }
-
-        return m;
+        return ::generateRandomMatrix<double>( sz, sz );
     }
 
     // Helper function to check if two matrices are equal within epsilon
