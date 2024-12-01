@@ -30,3 +30,6 @@ jobs:
 
       - name: Unit Test
         run: ${{github.workspace}}/build/test/test_all
+
+      - name: Benchmark
+        run: ${{github.workspace}}/build/benchmark/benchmark
