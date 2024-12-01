@@ -32,4 +32,4 @@ jobs:
         run: ${{github.workspace}}/build/test/test_all
 
       - name: Benchmark
-        run: ${{github.workspace}}/build/benchmark/benchmark
+        run: ${{github.workspace}}/build/benchmark/mat_benchmark
