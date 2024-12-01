@@ -21,4 +21,4 @@ static void BM_NaiveStrassenInversionBenchmark( benchmark::State& state )
     }
 }
 
-BENCHMARK(BM_NaiveStrassenInversionBenchmark)->Arg( 100 )->Arg( 500 )->Arg( 1000 )->Unit( cTimeUnit );
+BENCHMARK(BM_NaiveStrassenInversionBenchmark)->DenseRange( 100, 2000, 200 )->Unit( cTimeUnit );
