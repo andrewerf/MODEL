@@ -8,3 +8,4 @@ endif ()
 
 add_executable(mat_benchmark benchmark_strassen.cpp)
 target_link_libraries(mat_benchmark benchmark::benchmark_main)
+target_compile_options(mat_benchmark PUBLIC -march=native -Ofast)

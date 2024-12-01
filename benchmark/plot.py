@@ -39,6 +39,18 @@ def parse_args():
     """Parse commandline arguments"""
     parser = argparse.ArgumentParser(description="Visualize google-benchmark output")
     parser.add_argument(
+        "--filter",
+        type=str,
+        default=None,
+        help='regex to filter names of benchmarks that are displayed'
+    )
+    parser.add_argument(
+        "--xfieldvar",
+        type=int,
+        default=None,
+        help='for a benchmark with multiple args, select the number of the arg that will be taken as X value'
+    )
+    parser.add_argument(
         "-f",
         metavar="FILE",
         type=argparse.FileType("r"),
@@ -99,6 +111,37 @@ def parse_input_size(name):
     return int(splits[1])
 
 
+class InputSizeParser:
+    def __init__(self, args):
+        self.args = args
+
+    def parse(self, name):
+        xs = list(map(int, name.split('/')[1:]))
+        if len(xs) == 0:
+            return 1
+        if len(xs) == 1:
+            return xs[0]
+        if len(xs) == 2:
+            if self.args.xfieldvar is None:
+                raise RuntimeError('xfieldvar must be specified in case of multiple input sizes')
+            return xs[self.args.xfieldvar], xs[(self.args.xfieldvar + 1) % 2]
+        raise RuntimeError(f'Unsupported number of input sizes: {len(xs)}')
+
+    def populate(self, data: pd.DataFrame):
+        mod_rows = []
+        for i, row in data.iterrows():
+            szs = self.parse(row['name'])
+            if isinstance(szs, tuple):
+                row['input'] = szs[0]
+                row['label'] = f'{row["label"]}_{szs[1]}'
+            else:
+                row['input'] = szs
+            mod_rows.append(row)
+            data.loc[i] = row
+        ret = pd.DataFrame(mod_rows)
+        return ret
+
+
 def read_data(args):
     """Read and process dataframe using commandline args"""
     extension = pathlib.Path(args.file.name).suffix
@@ -117,8 +160,11 @@ def read_data(args):
         )
         exit(1)
     data["label"] = data["name"].apply(lambda x: x.split("/")[0])
-    data["input"] = data["name"].apply(parse_input_size)
+    ps = InputSizeParser(args)
+    data = ps.populate(data)
     data[args.metric] = data[args.metric].apply(TRANSFORMS[args.transform])
+    if args.filter is not None:
+        data = data[data["label"].str.contains(args.filter)]
     return data
 
 

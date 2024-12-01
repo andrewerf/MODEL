@@ -449,11 +449,11 @@ void multiplySubmatrix(
 // Top-level function to implement Strassen multiplication on two matrix-like
 // objects.
 template <
+    Index min_size=8,
+    typename SplitPolicy=PowerOfTwoSplitPolicy,
     typename T,
     typename ImplA, MatDim m, MatDim n_a,
-    typename ImplB, MatDim n_b, MatDim p,
-    Index min_size=8,
-    typename SplitPolicy=PowerOfTwoSplitPolicy>
+    typename ImplB, MatDim n_b, MatDim p>
 Mat<T, m, p> multiplyStrassen(
         const MatFacade<ImplA, T, m, n_a>& a,
         const MatFacade<ImplB, T, n_b, p>& b) {
