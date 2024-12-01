@@ -17,3 +17,5 @@ gtest_discover_tests(test_all)
 if ( ${APPLE} )
     target_link_libraries(test_all "-framework Accelerate")
 endif ()
+
+set (CMAKE_CXX_FLAGS_RELEASE "-Ofast")

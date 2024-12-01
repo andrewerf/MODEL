@@ -88,7 +88,7 @@ enum OpMode {
 // Perform the operation C <- A x B or C <- C + A x B on a submatrix (view).
 // This will be called when the Strassen iterations has divided the
 // multiplication problem into small enough matrices.
-template<
+/*template<
     OpMode op=OVERWRITE,
     typename SubmatrixC,
     typename SubmatrixA,
@@ -131,6 +131,71 @@ void multiplySubmatrixLeaf(
                 c(i, j) += s;
             } else {
                 c(i, j) = s;
+            }
+        }
+    }
+}*/
+
+// Perform the operation C <- A x B or C <- C + A x B on a submatrix (view).
+// This will be called when the Strassen iterations has divided the
+// multiplication problem into small enough matrices.
+template<
+    OpMode op=OVERWRITE,
+    typename SubmatrixC,
+    typename SubmatrixA,
+    typename SubmatrixB>
+void multiplySubmatrixLeaf(
+        SubmatrixC& c,
+        const SubmatrixA& a,
+        const SubmatrixB& b) {
+    Index m = a.rows();
+    Index n = a.cols();
+    Index p = b.cols();
+
+    assert(b.rows() == n);
+    assert(c.rows() == m && c.cols() == p);
+
+    using ElemT = typename SubmatrixC::ElemT;
+
+    // Define a 256-bit SIMD type
+    typedef ElemT block __attribute__ (( vector_size(32) ));
+
+    // Number of elements that can fit in a SIMD register
+    constexpr Index N = (256 / 8) / sizeof(ElemT);
+
+    // Copy A and B (transposed) to SIMD registers
+    Index num_blocks = (n + N - 1) / N;
+    alignas(32) block a_blocks[m * num_blocks];
+    alignas(32) block b_t_blocks[p * num_blocks];
+    memset(a_blocks, 0, sizeof(a_blocks));
+    memset(b_t_blocks, 0, sizeof(b_t_blocks));
+
+    for (Index i = 0; i < m; ++i) {
+        for (Index j = 0; j < n; ++j) {
+            a_blocks[i * num_blocks + (j / N)][j % N] = a(i, j);
+        }
+    }
+
+    for (Index i = 0; i < n; ++i) {
+        for (Index j = 0; j < p; ++j) {
+            b_t_blocks[j * num_blocks + (i / N)][i % N] = b(i, j);
+        }
+    }
+
+    for (Index i = 0; i < m; ++i) {
+        for (Index j = 0; j < p; ++j) {
+            block s{};
+            for (Index k = 0; k < num_blocks; ++k) {
+                s += a_blocks[i * num_blocks + k] * b_t_blocks[j * num_blocks + k];
+            }
+            typename SubmatrixC::ElemT sum = 0;
+            for (Index k = 0; k < N; ++k) {
+                sum += s[k];
+            }
+            if (op == ACCUMULATE) {
+                c(i, j) += sum;
+            } else {
+                c(i, j) = sum;
             }
         }
     }
@@ -452,7 +517,7 @@ template <
     typename T,
     typename ImplA, MatDim m, MatDim n_a,
     typename ImplB, MatDim n_b, MatDim p,
-    Index min_size=8,
+    Index min_size=64,
     typename SplitPolicy=PowerOfTwoSplitPolicy>
 Mat<T, m, p> multiplyStrassen(
         const MatFacade<ImplA, T, m, n_a>& a,

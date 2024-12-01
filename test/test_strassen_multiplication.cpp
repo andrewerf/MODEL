@@ -53,9 +53,9 @@ const MatrixProductSize kTestSizes[] = {
 };
 
 const MatrixProductSize kBenchmarkSizes[] = {
-    // 1.2s [BLAS: 68ms]
+    // 0.8s [BLAS: 68ms]
     { 2222, 2222, 2222 },
-    // 3.9s [BLAS: 184ms]
+    // 2.2s [BLAS: 184ms]
     { 2222, 3333, 4444 },
 
     // The following test cases were used during development to validate the
@@ -63,13 +63,13 @@ const MatrixProductSize kBenchmarkSizes[] = {
     // in multiplySubmatrix and to set the constants kInnerSplitRatio
     // and kOuterSplitRatio
 
-    // 1.1s (1.9s without split) [BLAS: 45ms]
+    // 0.9s (1.9s without split) [BLAS: 45ms]
     { 500, 4000, 4000 }, 
-    // 1.1s (1.9s without split) [BLAS: 44ms]
+    // 0.8s (1.9s without split) [BLAS: 44ms]
     { 4000, 4000, 500 },
-    // 1.3s [BLAS: 71ms]
+    // 0.9s [BLAS: 71ms]
     { 4000, 800, 4000 },
-    // 0.8s (1.3s without split) [BLAS: 27ms]
+    // 0.5s (1.3s without split) [BLAS: 27ms]
     { 800, 8000, 800 },
 };
 
