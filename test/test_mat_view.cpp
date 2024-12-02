@@ -141,3 +141,39 @@ TEST(MatView, Addition) {
     EXPECT_EQ(mat(2, 1), 28);
     EXPECT_EQ(mat(2, 2), 34);
 }
+
+TEST(MatView, CopyConstructor1) {
+    Mat<int, 3, 3> mat{
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9}
+    };
+    auto submat = mat.submatrix( 1, 1, 2, 2 );
+    auto submat2 = submat;
+
+    for ( Index i = 0; i < submat.rows(); ++i )
+        for ( Index j = 0; j < submat.cols(); ++j )
+            EXPECT_EQ( &submat2( i, j ), &submat( i, j ) );
+}
+
+template<typename T>
+auto submatrix_split( T& a )
+{
+    Index m = a.rows();
+    Index n = a.cols();
+    Index m2 = (m + 1) / 2;
+    Index n2 = (n + 1) / 2;
+    return std::tuple{
+        a.submatrix(0, 0, m2, n2),
+        a.submatrix(0, n2, m2, n - n2),
+        a.submatrix(m2, 0, m - m2, n2),
+        a.submatrix(m2, n2, m - m2, n - n2)
+    };
+}
+
+TEST(MatView, CopyConstructor2)
+{
+    Mat<int> mat = Mat<int, 4, 4>{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}};
+    auto [a, b, c, d] = submatrix_split( mat );
+    EXPECT_EQ( &a(0, 0), &mat(0, 0) );
+}

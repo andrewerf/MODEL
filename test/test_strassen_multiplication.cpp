@@ -7,7 +7,7 @@
 // Unit tests for Strassen Multiplication.
 
 // #include <BLASMultiplication.hpp>
-#include <io.hpp>
+#include <random.hpp>
 #include <StrassenMultiplication.hpp>
 
 // #include "MiniBenchmark.hpp"
@@ -22,23 +22,12 @@ class TestStrassenMultiplication :
     public ::testing::TestWithParam<MatrixProductSize> {
 };
 
-class BenchmarkStrassenMultiplication :
-    public ::testing::TestWithParam<MatrixProductSize> {
-};
-
 TEST_P(TestStrassenMultiplication, CompareWithNaiveMultiplication) {
     auto [m, n, p] = GetParam();
     auto a = generateRandomMatrix(m, n);
     auto b = generateRandomMatrix(n, p);
     auto c = multiplyStrassen(a, b);
     EXPECT_TRUE(isMatrixNear(c, a * b));
-}
-
-TEST_P(BenchmarkStrassenMultiplication, Benchmark) {
-    auto [m, n, p] = GetParam();
-    auto a = generateRandomMatrix(m, n);
-    auto b = generateRandomMatrix(n, p);
-    auto c = multiplyStrassen(a, b);
 }
 
 const MatrixProductSize kTestSizes[] = {
@@ -51,6 +40,25 @@ const MatrixProductSize kTestSizes[] = {
     { 129, 65, 129 },
     { 129, 222, 128 },
 };
+
+INSTANTIATE_TEST_SUITE_P(
+    TestStrassenMultiplicationAllSizes,
+    TestStrassenMultiplication,
+    testing::ValuesIn(kTestSizes),
+    ProductSizeToString());
+
+// While these are not proper benchmarks, they are useful for quickly
+// verifying the impact of a change in the code.
+/*class BenchmarkStrassenMultiplication :
+    public ::testing::TestWithParam<MatrixProductSize> {
+};
+
+TEST_P(BenchmarkStrassenMultiplication, Benchmark) {
+    auto [m, n, p] = GetParam();
+    auto a = generateRandomMatrix(m, n);
+    auto b = generateRandomMatrix(n, p);
+    auto c = multiplyStrassen(a, b);
+}
 
 const MatrixProductSize kBenchmarkSizes[] = {
     // 0.8s [BLAS: 68ms]
@@ -74,15 +82,10 @@ const MatrixProductSize kBenchmarkSizes[] = {
 };
 
 INSTANTIATE_TEST_SUITE_P(
-    TestStrassenMultiplicationAllSizes,
-    TestStrassenMultiplication,
-    testing::ValuesIn(kTestSizes),
-    ProductSizeToString());
-
-INSTANTIATE_TEST_SUITE_P(
     BenchmarkStrassenMultiplicationAllSizes,
     BenchmarkStrassenMultiplication,
     testing::ValuesIn(kBenchmarkSizes),
     ProductSizeToString());
+*/
 
 }  // namespace

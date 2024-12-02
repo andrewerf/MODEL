@@ -442,9 +442,9 @@ void multiplySubmatrixSquare(
 // This top-level function breaks down the product into several products of
 // smaller squarish matrices for which the Strassen algorithm is used.
 template <
-    OpMode op,
-    Index min_size,
-    typename SplitPolicy,
+    OpMode op=OVERWRITE,
+    Index min_size=64,
+    typename SplitPolicy=NaiveSplitPolicy,
     typename T,
     MatDim m_a, MatDim n_a, MatDim n_b, MatDim p_b,
     typename ImplA, typename ImplB, typename ImplC>
@@ -514,11 +514,11 @@ void multiplySubmatrix(
 // Top-level function to implement Strassen multiplication on two matrix-like
 // objects.
 template <
+    Index min_size=64,
+    typename SplitPolicy=NaiveSplitPolicy,
     typename T,
     typename ImplA, MatDim m, MatDim n_a,
-    typename ImplB, MatDim n_b, MatDim p,
-    Index min_size=64,
-    typename SplitPolicy=PowerOfTwoSplitPolicy>
+    typename ImplB, MatDim n_b, MatDim p>
 Mat<T, m, p> multiplyStrassen(
         const MatFacade<ImplA, T, m, n_a>& a,
         const MatFacade<ImplB, T, n_b, p>& b) {
