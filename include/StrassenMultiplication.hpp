@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <tuple>
 #include <vector>
+#include <cstring>
 
 namespace M
 {
@@ -167,8 +168,8 @@ void multiplySubmatrixLeaf(
     Index num_blocks = (n + N - 1) / N;
     alignas(32) block a_blocks[m * num_blocks];
     alignas(32) block b_t_blocks[p * num_blocks];
-    memset(a_blocks, 0, sizeof(a_blocks));
-    memset(b_t_blocks, 0, sizeof(b_t_blocks));
+    std::memset(a_blocks, 0, sizeof(a_blocks));
+    std::memset(b_t_blocks, 0, sizeof(b_t_blocks));
 
     for (Index i = 0; i < m; ++i) {
         for (Index j = 0; j < n; ++j) {
