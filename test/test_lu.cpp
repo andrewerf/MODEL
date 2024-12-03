@@ -82,7 +82,7 @@ TEST(LU, LUBasicProperties) {
         A(0, 0) = 4; A(0, 1) = 3;
         A(1, 0) = 6; A(1, 1) = 3;
 
-        auto result = LU(A);
+        auto result = LU(A).value();
 
         // Test L properties
         EXPECT_DOUBLE_EQ(result.L(0, 0), 1.0);  // Diagonal should be 1
@@ -102,7 +102,7 @@ TEST(LU, LUBasicProperties) {
         A(1, 0) = -2; A(1, 1) = 4; A(1, 2) = -2;
         A(2, 0) = 1; A(2, 1) = -2; A(2, 2) = 4;
 
-        auto result = LU(A);
+        auto result = LU(A).value();
 
         // Test L properties
         for (Index i = 0; i < 3; ++i) {
@@ -127,7 +127,7 @@ TEST(LU, LUSpecialCases) {
     // Identity matrix
     {
         auto I = Mat<double, 3, 3>::Identity(3, 3);
-        auto result = LU(I);
+        auto result = LU(I).value();
 
         // L should be identity
         EXPECT_TRUE(isMatrixNear(result.L, I));
@@ -142,7 +142,7 @@ TEST(LU, LUSpecialCases) {
             for (Index j = 0; j < 3; ++j)
                 A(i, j) = (j >= i) ? i + j + 1 : 0;
 
-        auto result = LU(A);
+        auto result = LU(A).value();
 
         // L should be identity
         auto I = Mat<double, 3, 3>::Identity(3, 3);
@@ -158,7 +158,7 @@ TEST(LU, LUSpecialCases) {
             for (Index j = 0; j < 3; ++j)
                 A(i, j) = (j <= i) ? i + j + 1 : 0;
 
-        auto result = LU(A);
+        auto result = LU(A).value();
 
         // Test A = L * U
         auto product = result.L * result.U;
@@ -174,13 +174,21 @@ TEST(LU, LUNumericalStability) {
     A(1, 0) = 1; A(1, 1) = 1; A(1, 2) = 1;
     A(2, 0) = 1; A(2, 1) = 1; A(2, 2) = 1;
 
-    auto result = LU(A);
+    auto result = LU(A).value();
 
     // Test A = L * U with larger epsilon due to numerical instability
     auto product = result.L * result.U;
     EXPECT_TRUE(isMatrixNear(product, A, 1e-5));
 }
 
+TEST(LU, NullPivot) {
+    Mat<float, 3, 3> m;
+    m(0, 0) = 1; m(0, 1) = 1; m(0, 2) = 1;
+    m(1, 0) = 1; m(1, 1) = 1; m(1, 2) = 3;
+    m(2, 0) = 1; m(2, 1) = 2; m(2, 2) = 4;
+    auto result = LU(m);
+    EXPECT_FALSE(result.has_value());
+}
 
 // Test with different numeric types
 TEST(LU, LUDifferentTypes) {
@@ -190,7 +198,7 @@ TEST(LU, LUDifferentTypes) {
         A(0, 0) = 4.0f; A(0, 1) = 3.0f;
         A(1, 0) = 6.0f; A(1, 1) = 3.0f;
 
-        auto result = LU(A);
+        auto result = LU(A).value();
         auto product = result.L * result.U;
         EXPECT_TRUE(isMatrixNear(product, A, 1e-6f));
     }
@@ -201,7 +209,7 @@ TEST(LU, LUDifferentTypes) {
         A(0, 0) = 4.0; A(0, 1) = 3.0;
         A(1, 0) = 6.0; A(1, 1) = 3.0;
 
-        auto result = LU(A);
+        auto result = LU(A).value();
         auto product = result.L * result.U;
         EXPECT_TRUE(isMatrixNear(product, A, 1e-10));
     }
@@ -212,7 +220,7 @@ TEST(PLUQ, SimpleMatrix2x2) {
     A(0,0) = 4; A(0,1) = 3;
     A(1,0) = 6; A(1,1) = 3;
 
-    auto [P, L, U, Q] = PLUQ(A);
+    auto [P, L, U, Q] = PLUQ(A).value();
 
     // Test P and Q are permutation matrices
     EXPECT_TRUE(isPermutation(P));
@@ -240,7 +248,7 @@ TEST(PLUQ, Matrix3x3) {
     A(1,0) = -1; A(1,1) = 2; A(1,2) = -1;
     A(2,0) = 0; A(2,1) = -1; A(2,2) = 2;
 
-    auto [P, L, U, Q] = PLUQ(A);
+    auto [P, L, U, Q] = PLUQ(A).value();
 
     // Test properties of the decomposition
     EXPECT_TRUE(isPermutation(P));
@@ -262,7 +270,7 @@ TEST(PLUQ, DiagonalMatrix) {
         for(Index j = 0; j < 3; ++j)
             A(i,j) = (i == j) ? i + 1 : 0;
 
-    auto [P, L, U, Q] = PLUQ(A);
+    auto [P, L, U, Q] = PLUQ(A).value();
 
     // For a diagonal matrix, U should be similar to original
     // and L should be mostly identity
@@ -279,7 +287,7 @@ TEST(PLUQ, IdentityMatrix) {
     const Index size = 3;
     auto A = Mat<double>::Identity(size, size);
 
-    auto [P, L, U, Q] = PLUQ(A);
+    auto [P, L, U, Q] = PLUQ(A).value();
 
     // For identity matrix, decomposition should be trivial
     EXPECT_TRUE(isPermutation(P));
@@ -300,7 +308,7 @@ TEST(PLUQ, NearSingularMatrix) {
     A(0,0) = 1e-15; A(0,1) = 1;
     A(1,0) = 1;     A(1,1) = 1;
 
-    auto [P, L, U, Q] = PLUQ(A);
+    auto [P, L, U, Q] = PLUQ(A).value();
 
     // The decomposition should still maintain basic properties
     EXPECT_TRUE(isPermutation(P));
@@ -313,4 +321,13 @@ TEST(PLUQ, NearSingularMatrix) {
     for(Index i = 0; i < 2; ++i)
         for(Index j = 0; j < 2; ++j)
             EXPECT_NEAR(reconstructed(i,j), A(i,j), 1e-10);
+}
+
+TEST(PLUQ, NullPivot) {
+    Mat<float, 3, 3> m;
+    m(0, 0) = 3; m(0, 1) = 2; m(0, 2) = 1;
+    m(1, 0) = 3; m(1, 1) = 2; m(1, 2) = 1;
+    m(2, 0) = 3; m(2, 1) = 2; m(2, 2) = 1;
+    auto result = PLUQ(m);
+    EXPECT_FALSE(result.has_value());
 }

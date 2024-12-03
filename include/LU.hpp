@@ -6,6 +6,7 @@
 #include <limits>
 #include <Mat.hpp>
 
+#include <optional>
 
 namespace M
 {
@@ -18,7 +19,7 @@ struct LU_Result
 };
 
 template <typename T, typename Impl, MatDim n, MatDim m>
-LU_Result<T, n> LU( const MatFacade<Impl, T, n, m>& mat )
+std::optional<LU_Result<T, n> > LU( const MatFacade<Impl, T, n, m>& mat )
 {
     static_assert( n == m );
     assert( mat.rows() == mat.cols() );
@@ -29,6 +30,11 @@ LU_Result<T, n> LU( const MatFacade<Impl, T, n, m>& mat )
     {
         for ( Index j = k + 1; j < mat.rows(); ++j )
         {
+            if (U( k, k ) == 0)
+            {
+                // A null pivot was encountered, abort decomposition.
+                return {};
+            }
             const T alpha = -U( j, k ) / U( k, k );
             L( j, k ) = -alpha;
 
@@ -37,7 +43,7 @@ LU_Result<T, n> LU( const MatFacade<Impl, T, n, m>& mat )
         }
     }
 
-    return { L, U };
+    return { { L, U } };
 }
 
 
@@ -48,7 +54,7 @@ struct PLUQ_Result
 };
 
 template <typename T, typename Impl, MatDim n, MatDim m>
-PLUQ_Result<T, n> PLUQ( const MatFacade<Impl, T, n, m>& matOrig )
+std::optional<PLUQ_Result<T, n> > PLUQ( const MatFacade<Impl, T, n, m>& matOrig )
 {
     static_assert( n == m );
     assert( matOrig.rows() == matOrig.cols() );
@@ -58,14 +64,14 @@ PLUQ_Result<T, n> PLUQ( const MatFacade<Impl, T, n, m>& matOrig )
     auto argmax = [&U] ( Index k0 )
     {
         std::pair<Index, Index> ret;
-        T val = std::numeric_limits<T>::min();
+        T val = std::numeric_limits<T>::lowest();
         for ( Index row = k0; row < U.rows(); ++row )
         {
             for ( Index col = k0; col < U.rows(); ++col )
             {
-                if ( U( row, col ) > val )
+                if ( fabs(U( row, col )) > val )
                 {
-                    val = U( row, col );
+                    val = fabs(U( row, col ));
                     ret = { row, col };
                 }
             }
@@ -80,12 +86,17 @@ PLUQ_Result<T, n> PLUQ( const MatFacade<Impl, T, n, m>& matOrig )
 
     for ( Index k = 0; k < matOrig.rows() - 1; ++k )
     {
-        // find the max element in the subUrix
+        // find the max element in the subMatrix
         auto [mxrow, mxcol] = argmax( k );
-
+    
         // swap cols and rows in the original U, so that U(k, k) is the max element
         U.swapCols( k, mxcol );
         U.swapRows( k, mxrow );
+
+        // the largest element, in absolute value, is 0. It cannot be used as
+        // a pivot: abort the decomposition.
+        if ( U(k, k) == 0 )
+            return {};
 
         // compensate for swapping in the original U by swapping surroundings
         // Remember that:
@@ -109,7 +120,7 @@ PLUQ_Result<T, n> PLUQ( const MatFacade<Impl, T, n, m>& matOrig )
         }
     }
 
-    return { P, L, U, Q };
+    return { { P, L, U, Q } };
 }
 
 }

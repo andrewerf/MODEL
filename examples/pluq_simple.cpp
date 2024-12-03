@@ -31,7 +31,7 @@ int main()
     mat( 3, 2 ) = 1;
     mat( 3, 3 ) = 1;
 
-    auto [P, L, U, Q] = PLUQ( mat );
+    auto [P, L, U, Q] = PLUQ( mat ).value();
     std::cout << P << '\n';
     std::cout << L << '\n';
     std::cout << U << '\n';
