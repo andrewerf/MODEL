@@ -1,6 +1,6 @@
-//
-// Author Ruchi Thareja M1 IQ
-//
+//S1 2024
+// Author: Ruchi Thareja M1 IQ
+//-----------------------------------------------------------------
 
 #include <benchmark/benchmark.h>
 #include "Mat.hpp"
