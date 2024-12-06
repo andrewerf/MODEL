@@ -39,6 +39,9 @@ const MatrixProductSize kTestSizes[] = {
     { 64, 129, 65 },
     { 129, 65, 129 },
     { 129, 222, 128 },
+    { 50000, 50, 50 },
+    { 50, 50000, 50 },
+    { 50, 50, 50000 },
 };
 
 INSTANTIATE_TEST_SUITE_P(

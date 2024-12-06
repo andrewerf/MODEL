@@ -464,8 +464,12 @@ void multiplySubmatrix(
 
     const Index kOuterSplitRatio = 8;
     const Index kInnerSplitRatio = 2;
+    const Index kMaxSizeWithoutSplit = 4096;
 
-    if (m <= min_size || n <= min_size || p <= min_size) {
+    if ((m <= min_size || n <= min_size || p <= min_size) && \
+        (m <= kMaxSizeWithoutSplit) && \
+        (n <= kMaxSizeWithoutSplit) && \
+        (p <= kMaxSizeWithoutSplit)) {
         // A and B are small or skinny: directly use the
         // explicit multiplication.
         multiplySubmatrixLeaf<op>(c, a, b);
