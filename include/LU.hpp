@@ -140,11 +140,11 @@ Mat<T, n, 1> solveLower( const MatFacade<Impl1, T, n, m>& L, const MatFacade<Imp
     Mat<T, n, 1> ret( L.rows(), 1 );
     for ( Index k = 0; k < L.rows(); ++k )
     {
-        auto& f = ret( k, 0 );
-        f = y( k, 0 );
+        T f = y( k, 0 );
         for ( Index i = 0; i < k; ++i )
             f -= L( k, i ) * ret( i, 0 );
         f /= L( k, k );
+        ret( k, 0 ) = f;
     }
 
     return ret;
@@ -166,11 +166,11 @@ Mat<T, n, 1> solveUpper( const MatFacade<Impl1, T, n, m>& U, const MatFacade<Imp
     Mat<T, n, 1> ret( rows, 1 );
     for ( Index k = 1; k <= rows; ++k )
     {
-        auto& f = ret( rows - k, 0 );
-        f = y( rows - k, 0 );
+        T f = y( rows - k, 0 );
         for ( Index i = 1; i < k; ++i )
             f -= U( rows - k, rows - i ) * ret( rows - i, 0 );
         f /= U( rows - k, rows - k );
+        ret( rows - k, 0 ) = f;
     }
 
     return ret;
