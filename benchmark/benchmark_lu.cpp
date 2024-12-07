@@ -9,19 +9,19 @@
 
 namespace {
 
+using T = float;
+
 // Benchmark for LU decomposition
-template <typename T, M::MatDim n>
 void BM_LU(benchmark::State& state) {
-    auto mat = M::generateRandomMatrix<T>(n.val, n.val);
+    auto mat = M::generateRandomMatrix<T>(state.range( 0 ), state.range( 0 ));
     for (auto _ : state) {
         benchmark::DoNotOptimize(M::LU(mat));
     }
 }
 
 // Benchmark for PLUQ decomposition
-template <typename T, M::MatDim n>
 void BM_PLUQ(benchmark::State& state) {
-    auto mat = M::generateRandomMatrix<T>(n.val, n.val);
+    auto mat = M::generateRandomMatrix<T>(state.range( 0 ), state.range( 0 ));
     for (auto _ : state) {
         benchmark::DoNotOptimize(M::PLUQ(mat));
     }
@@ -30,12 +30,7 @@ void BM_PLUQ(benchmark::State& state) {
 } // namespace
 
 // Register benchmarks
-BENCHMARK_TEMPLATE(BM_LU, double, M::MatDim(10));
-BENCHMARK_TEMPLATE(BM_LU, double, M::MatDim(50));
-BENCHMARK_TEMPLATE(BM_LU, double, M::MatDim(100));
-
-BENCHMARK_TEMPLATE(BM_PLUQ, double, M::MatDim(10));
-BENCHMARK_TEMPLATE(BM_PLUQ, double, M::MatDim(50));
-BENCHMARK_TEMPLATE(BM_PLUQ, double, M::MatDim(100));
+BENCHMARK(BM_LU)->DenseRange( 100, 2000, 500 );
+BENCHMARK(BM_PLUQ)->DenseRange( 100, 2000, 500 );
 
 BENCHMARK_MAIN();
