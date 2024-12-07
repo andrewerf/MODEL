@@ -126,9 +126,9 @@ std::optional<PLUQ_Result<T, n> > PLUQ( const MatFacade<Impl, T, n, m>& matOrig 
 
 
 /// Returns solution of the linear system L*x = y where L is a lower triangular matrix
-/// @note If L is not lower triangular, returns garbage
+/// @return If L is not lower triangular, returns garbage. If L is degenerate, return nullopt
 template <typename T, typename Impl1, typename Impl2, MatDim n, MatDim m, MatDim n1, MatDim m1>
-Mat<T, n, 1> solveLower( const MatFacade<Impl1, T, n, m>& L, const MatFacade<Impl2, T, n1, m1>& y )
+std::optional<Mat<T, n, 1>> solveLower( const MatFacade<Impl1, T, n, m>& L, const MatFacade<Impl2, T, n1, m1>& y )
 {
     static_assert( n == m, "Only square matrices are supported" );
     assert( L.rows() == L.cols() );
@@ -143,7 +143,10 @@ Mat<T, n, 1> solveLower( const MatFacade<Impl1, T, n, m>& L, const MatFacade<Imp
         T f = y( k, 0 );
         for ( Index i = 0; i < k; ++i )
             f -= L( k, i ) * ret( i, 0 );
-        f /= L( k, k );
+        auto t = L( k, k );
+        if ( t == 0 )
+            return std::nullopt;
+        f /= t;
         ret( k, 0 ) = f;
     }
 
@@ -151,9 +154,9 @@ Mat<T, n, 1> solveLower( const MatFacade<Impl1, T, n, m>& L, const MatFacade<Imp
 }
 
 /// Returns solution of the linear system U*x = y where U is an upper triangular matrix
-/// @note If U is not upper triangular, returns garbage
+/// @return If U is not upper triangular, returns garbage. If U is degenerate, return nullopt
 template <typename T, typename Impl1, typename Impl2, MatDim n, MatDim m, MatDim n1, MatDim m1>
-Mat<T, n, 1> solveUpper( const MatFacade<Impl1, T, n, m>& U, const MatFacade<Impl2, T, n1, m1>& y )
+std::optional<Mat<T, n, 1>> solveUpper( const MatFacade<Impl1, T, n, m>& U, const MatFacade<Impl2, T, n1, m1>& y )
 {
     static_assert( n == m, "Only square matrices are supported" );
     assert( U.rows() == U.cols() );
@@ -169,7 +172,10 @@ Mat<T, n, 1> solveUpper( const MatFacade<Impl1, T, n, m>& U, const MatFacade<Imp
         T f = y( rows - k, 0 );
         for ( Index i = 1; i < k; ++i )
             f -= U( rows - k, rows - i ) * ret( rows - i, 0 );
-        f /= U( rows - k, rows - k );
+        auto t = U( rows - k, rows - k );
+        if ( t == 0 )
+            return std::nullopt;
+        f /= t;
         ret( rows - k, 0 ) = f;
     }
 
@@ -203,8 +209,10 @@ std::optional<Mat<T, n_, m_>> inverseLU( const MatFacade<Impl, T, n_, m_>& mat )
             col( i - 1, 0 ) = 0;
         col( i, 0 ) = T( 1 );
 
-        auto z = solveLower( L, col );
-        ret.submatrix( 0, i, n, 1 ) = solveUpper( U, z );
+        auto x = solveLower( L, col ).and_then( [&U] ( auto&& z ) { return solveUpper( U, z ); } );
+        if ( !x )
+            return std::nullopt;
+        ret.submatrix( 0, i, n, 1 ) = *x;
     }
 
     return ret;

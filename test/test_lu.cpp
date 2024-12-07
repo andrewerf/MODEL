@@ -343,10 +343,12 @@ TEST(LU, Solve) {
 
     auto y = generateRandomMatrix( 100, 1 );
     auto x = solveLower( L, y );
-    EXPECT_MATRIX_NEAR( L * x, y );
+    EXPECT_TRUE( x );
+    EXPECT_MATRIX_NEAR( L * *x, y );
 
     auto z = solveUpper( U, y );
-    EXPECT_MATRIX_NEAR( U * z, y );
+    EXPECT_TRUE( z );
+    EXPECT_MATRIX_NEAR( U * *z, y );
 }
 
 TEST(LU, Inverse) {
