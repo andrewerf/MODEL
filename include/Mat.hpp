@@ -111,9 +111,9 @@ public:
         { return static_cast<const Impl&>( *this ); }
 
     constexpr ElemT& operator() ( Index i, Index j )
-        { return impl()( i, j ); }
+        { return impl().at_( i, j ); }
     constexpr const ElemT& operator() ( Index i, Index j ) const
-        { return impl()( i, j ); }
+        { return impl().at_( i, j ); }
 
 
     /// @brief Get submatrix view of the statically known size
@@ -297,9 +297,9 @@ struct Mat : public MatFacade<Mat<T, n, m>, T, n, m>
         return res;
     }
 
-    constexpr T& operator() ( Index i, Index j )
+    constexpr T& at_( Index i, Index j )
         { return a[i * cols() + j]; }
-    constexpr const T& operator() ( Index i, Index j ) const
+    constexpr const T& at_( Index i, Index j ) const
         { return a[i * cols() + j]; }
 
     std::vector<T> a;

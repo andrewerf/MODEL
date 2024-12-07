@@ -97,9 +97,9 @@ public:
     }
 
 
-    constexpr T& operator() ( Index i, Index j )
+    constexpr T& at_( Index i, Index j )
         { return base_( i + r1, j + c1 ); }
-    constexpr const T& operator() ( Index i, Index j ) const
+    constexpr const T& at_( Index i, Index j ) const
         { return base_( i + r1, j + c1 ); }
 };
 
