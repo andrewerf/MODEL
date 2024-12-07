@@ -8,6 +8,5 @@ set(CMAKE_CXX_FLAGS_RELEASE "-march=native -Ofast -g -DNDEBUG")
 
 include_directories(include)
 
-add_subdirectory(examples)
 add_subdirectory(test)
 add_subdirectory(benchmark)
