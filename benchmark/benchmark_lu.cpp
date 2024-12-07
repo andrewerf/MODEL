@@ -27,10 +27,20 @@ void BM_PLUQ(benchmark::State& state) {
     }
 }
 
+void BM_LUInversion( benchmark::State& state )
+{
+    auto mat = M::generateRandomMatrix<T>( state.range( 0 ), state.range( 0 ) );
+    for ( auto _ : state )
+    {
+        benchmark::DoNotOptimize(M::inverseLU( mat ));
+    }
+}
+
 } // namespace
 
 // Register benchmarks
-BENCHMARK(BM_LU)->DenseRange( 100, 2000, 500 );
-BENCHMARK(BM_PLUQ)->DenseRange( 100, 2000, 500 );
+BENCHMARK(BM_LU)->DenseRange( 100, 2600, 500 );
+BENCHMARK(BM_PLUQ)->DenseRange( 100, 2600, 500 );
+BENCHMARK(BM_LUInversion)->DenseRange( 100, 2600, 500 );
 
 BENCHMARK_MAIN();
