@@ -3,6 +3,7 @@
 #include <LU.hpp>
 
 #include "test_utils.hpp"
+#include "random.hpp"
 
 using namespace M;
 
@@ -330,4 +331,20 @@ TEST(PLUQ, NullPivot) {
     m(2, 0) = 3; m(2, 1) = 2; m(2, 2) = 1;
     auto result = PLUQ(m);
     EXPECT_FALSE(result.has_value());
+}
+
+TEST(LU, Solve) {
+    auto mat = generateRandomMatrix( 100, 100 );
+    auto maybeLU = LU( mat );
+    ASSERT_TRUE( maybeLU );
+    auto [L, U] = *maybeLU;
+    ASSERT_TRUE( isLowerTriangular( L ) );
+    ASSERT_TRUE( isUpperTriangular( U ) );
+
+    auto y = generateRandomMatrix( 100, 1 );
+    auto x = solveLower( L, y );
+    EXPECT_MATRIX_NEAR( L * x, y );
+
+    auto z = solveUpper( U, y );
+    EXPECT_MATRIX_NEAR( U * z, y );
 }

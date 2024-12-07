@@ -123,4 +123,56 @@ std::optional<PLUQ_Result<T, n> > PLUQ( const MatFacade<Impl, T, n, m>& matOrig 
     return { { P, L, U, Q } };
 }
 
+
+/// Returns solution of the linear system L*x = y where L is a lower triangular matrix
+/// @note If L is not lower triangular, returns garbage
+template <typename T, typename Impl, MatDim n, MatDim m, MatDim n1, MatDim m1>
+Mat<T, n, 1> solveLower( const MatFacade<Impl, T, n, m>& L, const MatFacade<Impl, T, n1, m1>& y )
+{
+    static_assert( n == m, "Only square matrices are supported" );
+    assert( L.rows() == L.cols() );
+    static_assert( m == n1, "Dimension of y should match that of L" );
+    assert( L.cols() == y.rows() );
+    static_assert( m1 == 1, "y is a column-vector" );
+    assert( y.cols() == 1 );
+
+    Mat<T, n, 1> ret( L.rows(), 1 );
+    for ( Index k = 0; k < L.rows(); ++k )
+    {
+        auto& f = ret( k, 0 );
+        f = y( k, 0 );
+        for ( Index i = 0; i < k; ++i )
+            f -= L( k, i ) * ret( i, 0 );
+        f /= L( k, k );
+    }
+
+    return ret;
+}
+
+/// Returns solution of the linear system U*x = y where U is an upper triangular matrix
+/// @note If U is not upper triangular, returns garbage
+template <typename T, typename Impl, MatDim n, MatDim m, MatDim n1, MatDim m1>
+Mat<T, n, 1> solveUpper( const MatFacade<Impl, T, n, m>& U, const MatFacade<Impl, T, n1, m1>& y )
+{
+    static_assert( n == m, "Only square matrices are supported" );
+    assert( U.rows() == U.cols() );
+    static_assert( m == n1, "Dimension of y should match that of U" );
+    assert( U.cols() == y.rows() );
+    static_assert( m1 == 1, "y is a column-vector" );
+    assert( y.cols() == 1 );
+
+    const auto rows = U.rows();
+    Mat<T, n, 1> ret( rows, 1 );
+    for ( Index k = 1; k <= rows; ++k )
+    {
+        auto& f = ret( rows - k, 0 );
+        f = y( rows - k, 0 );
+        for ( Index i = 1; i < k; ++i )
+            f -= U( rows - k, rows - i ) * ret( rows - i, 0 );
+        f /= U( rows - k, rows - k );
+    }
+
+    return ret;
+}
+
 }

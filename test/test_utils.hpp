@@ -30,11 +30,10 @@ bool isMatrixNear(const MatFacade<Impl1, T, n, m>& a,
 }
 
 // Compare two matrices (up to the given tolerance).
-template<typename T>
-void EXPECT_MATRIX_NEAR(const Mat<T>& a, const Mat<T>& b, T atol = 1e-8) {
-    ASSERT_EQ( a.rows(), a.cols() );
-    ASSERT_EQ( b.rows(), b.cols() );
+template<typename M1, typename M2, typename T = typename M1::ElemT>
+void EXPECT_MATRIX_NEAR(const M1& a, const M2& b, T atol = 1e-8) {
     ASSERT_EQ( a.rows(), b.rows() );
+    ASSERT_EQ( a.cols(), b.cols() );
 
     for (Index i = 0; i < a.rows(); ++i) {
         for (Index j = 0; j < a.cols(); ++j) {
