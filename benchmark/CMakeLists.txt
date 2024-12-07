@@ -6,10 +6,6 @@ if ( NOT benchmark_FOUND )
     set_target_properties(benchmark PROPERTIES FOLDER extern)
 endif ()
 
-add_executable(mat_benchmark benchmark_strassen.cpp)
+add_executable(mat_benchmark benchmark_strassen.cpp benchmark_lu.cpp)
 target_link_libraries(mat_benchmark benchmark::benchmark_main)
 target_compile_options(mat_benchmark PUBLIC -march=native -Ofast)
-
-add_executable(benchmark_lu benchmark_lu.cpp)
-target_link_libraries(benchmark_lu benchmark::benchmark_main)
-target_compile_options(benchmark_lu PUBLIC -march=native -Ofast)
