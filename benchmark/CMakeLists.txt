@@ -7,5 +7,5 @@ if ( NOT benchmark_FOUND )
 endif ()
 
 add_executable(mat_benchmark benchmark_strassen.cpp benchmark_lu.cpp)
-target_compile_definitions(mat_benchmark PRIVATE "BLOCK_SIZES={ 64, 128 }")
+target_compile_definitions(mat_benchmark PRIVATE "MULT_BLOCK_SIZES={ 64, 128 }" "INV_BLOCK_SIZES={ 256 }")
 target_link_libraries(mat_benchmark benchmark::benchmark_main)
