@@ -4,7 +4,7 @@ project(Mat)
 set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE "-march=native -Ofast -g")
+set(CMAKE_CXX_FLAGS_RELEASE "-march=native -Ofast -g -DNDEBUG")
 
 include_directories(include)
 
