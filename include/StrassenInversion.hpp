@@ -5,6 +5,7 @@
 
 #include "Mat.hpp"
 #include "MatView.hpp"
+#include "LU.hpp"
 
 #include <optional>
 
@@ -13,7 +14,7 @@ namespace M
 
 
 template <typename T, typename Impl, MatDim n, MatDim m, typename F = std::multiplies<>>
-std::optional<Mat<T, n, m> > inverseStrassen( const MatFacade<Impl, T, n, m>& mat, F mult = {} )
+std::optional<Mat<T, n, m> > inverseStrassen( const MatFacade<Impl, T, n, m>& mat, F mult = {}, Index leafSize = 512 )
 {
     static_assert( n == m );
     assert( mat.rows() == mat.cols() );
@@ -29,6 +30,9 @@ std::optional<Mat<T, n, m> > inverseStrassen( const MatFacade<Impl, T, n, m>& ma
         }
     }
 
+    if ( mat.rows() <= leafSize )
+        return inverseLU( mat );
+
     Index r2 = mat.rows() / 2;
     Index c2 = mat.cols() / 2;
     const auto a = mat.submatrix( 0, 0, r2, c2 );
@@ -37,19 +41,20 @@ std::optional<Mat<T, n, m> > inverseStrassen( const MatFacade<Impl, T, n, m>& ma
     const auto d = mat.submatrix( r2, c2, mat.rows() - r2, mat.cols() - c2 );
 
     const auto a_inv = inverseStrassen( a );
-    if ( !a_inv.has_value() )
+    if ( !a_inv )
         return {};
 
-    const auto e = a_inv.value();
-    const auto Z = d - mult( mult( c, e ), b );
+    const auto& e = *a_inv;
+    const auto ce = mult( c, e );
+    const auto Z = d - mult( ce, b );
     const auto Z_inv = inverseStrassen( Z );
-    if ( !Z_inv.has_value() )
+    if ( !Z_inv )
         return {};
-    const auto t = Z_inv.value();
+    const auto& t = *Z_inv;
 
     const auto y = -mult( mult( e, b ), t );
     const auto z = -mult( mult( t, c ), e );
-    const auto x = e - mult( y, mult( c, e ) );
+    const auto x = e - mult( y, ce );
 
     Mat<T, n, m> ret( mat.rows(), mat.cols() );
     ret.submatrix( 0, 0, r2, c2 ) = x;

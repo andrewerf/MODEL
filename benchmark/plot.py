@@ -121,11 +121,18 @@ class InputSizeParser:
             return 1
         if len(xs) == 1:
             return xs[0]
-        if len(xs) == 2:
+        else:
             if self.args.xfieldvar is None:
                 raise RuntimeError('xfieldvar must be specified in case of multiple input sizes')
-            return xs[self.args.xfieldvar], xs[(self.args.xfieldvar + 1) % 2]
-        raise RuntimeError(f'Unsupported number of input sizes: {len(xs)}')
+            if self.args.xfieldvar < 0:
+                xfieldvar = len(xs) + self.args.xfieldvar
+            else:
+                xfieldvar = self.args.xfieldvar
+            r = []
+            for i in range(0, len(xs)):
+                if i != xfieldvar:
+                    r.append(str(xs[i]))
+            return xs[xfieldvar], '_'.join(r)
 
     def populate(self, data: pd.DataFrame):
         mod_rows = []

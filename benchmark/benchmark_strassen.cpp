@@ -40,12 +40,23 @@ auto getStrassenMult( int min_size )
 
 
 template <int input_from, int input_to, int input_step>
-static void blockSizeAndInputSizeArgs( benchmark::internal::Benchmark* b )
+static void multBlockSizeAndInputSizeArgs( benchmark::internal::Benchmark* b )
 {
-    for ( int bs : BLOCK_SIZES )
+    for ( int bs : MULT_BLOCK_SIZES )
     {
         for ( int i = input_from; i <= input_to; i += input_step )
             b->Args( { bs, i } );
+    }
+}
+
+template <int input_from, int input_to, int input_step>
+static void invBlockSizeAndInputSizeArgs( benchmark::internal::Benchmark* b )
+{
+    for ( int inv_bs : INV_BLOCK_SIZES )
+    for ( int mult_bs : MULT_BLOCK_SIZES )
+    {
+        for ( int i = input_from; i <= input_to; i += input_step )
+            b->Args( { inv_bs, mult_bs, i } );
     }
 }
 
@@ -65,16 +76,17 @@ BENCHMARK(BM_NaiveStrassenInversion)->DenseRange( 100, 2000, 500 )->Unit( cTimeU
 
 static void BM_StrassenInversion( benchmark::State& state )
 {
-    auto sz = state.range( 1 );
+    auto inv_bs = state.range( 0 );
+    auto sz = state.range( 2 );
     auto mat = generateRandomMatrix<float>( sz, sz );
-    auto mult = getStrassenMult( state.range( 0 ) );
+    auto mult = getStrassenMult( state.range( 1 ) );
     for ( auto _ : state )
     {
         benchmark::DoNotOptimize( inverseStrassen( mat, mult ) );
     }
 }
 
-BENCHMARK(BM_StrassenInversion)->Apply( blockSizeAndInputSizeArgs<100, 2600, 500> )->Unit( cTimeUnit );
+BENCHMARK(BM_StrassenInversion)->Apply( invBlockSizeAndInputSizeArgs<100, 2600, 500> )->Unit( cTimeUnit );
 
 static void BM_StrassenMultiplication( benchmark::State& state )
 {
@@ -88,4 +100,4 @@ static void BM_StrassenMultiplication( benchmark::State& state )
     }
 }
 
-BENCHMARK(BM_StrassenMultiplication)->Apply( blockSizeAndInputSizeArgs<100, 2600, 500> )->Unit( cTimeUnit );
+BENCHMARK(BM_StrassenMultiplication)->Apply( multBlockSizeAndInputSizeArgs<100, 2600, 500> )->Unit( cTimeUnit );

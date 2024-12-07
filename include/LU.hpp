@@ -5,6 +5,7 @@
 
 #include <limits>
 #include <Mat.hpp>
+#include <MatView.hpp>
 
 #include <optional>
 
@@ -121,6 +122,100 @@ std::optional<PLUQ_Result<T, n> > PLUQ( const MatFacade<Impl, T, n, m>& matOrig 
     }
 
     return { { P, L, U, Q } };
+}
+
+
+/// Returns solution of the linear system L*x = y where L is a lower triangular matrix
+/// @return If L is not lower triangular, returns garbage. If L is degenerate, return nullopt
+template <typename T, typename Impl1, typename Impl2, MatDim n, MatDim m, MatDim n1, MatDim m1>
+std::optional<Mat<T, n, 1>> solveLower( const MatFacade<Impl1, T, n, m>& L, const MatFacade<Impl2, T, n1, m1>& y )
+{
+    static_assert( n == m, "Only square matrices are supported" );
+    assert( L.rows() == L.cols() );
+    static_assert( m == n1, "Dimension of y should match that of L" );
+    assert( L.cols() == y.rows() );
+    static_assert( m1 == 1, "y is a column-vector" );
+    assert( y.cols() == 1 );
+
+    Mat<T, n, 1> ret( L.rows(), 1 );
+    for ( Index k = 0; k < L.rows(); ++k )
+    {
+        T f = y( k, 0 );
+        for ( Index i = 0; i < k; ++i )
+            f -= L( k, i ) * ret( i, 0 );
+        auto t = L( k, k );
+        if ( t == 0 )
+            return std::nullopt;
+        f /= t;
+        ret( k, 0 ) = f;
+    }
+
+    return ret;
+}
+
+/// Returns solution of the linear system U*x = y where U is an upper triangular matrix
+/// @return If U is not upper triangular, returns garbage. If U is degenerate, return nullopt
+template <typename T, typename Impl1, typename Impl2, MatDim n, MatDim m, MatDim n1, MatDim m1>
+std::optional<Mat<T, n, 1>> solveUpper( const MatFacade<Impl1, T, n, m>& U, const MatFacade<Impl2, T, n1, m1>& y )
+{
+    static_assert( n == m, "Only square matrices are supported" );
+    assert( U.rows() == U.cols() );
+    static_assert( m == n1, "Dimension of y should match that of U" );
+    assert( U.cols() == y.rows() );
+    static_assert( m1 == 1, "y is a column-vector" );
+    assert( y.cols() == 1 );
+
+    const auto rows = U.rows();
+    Mat<T, n, 1> ret( rows, 1 );
+    for ( Index k = 1; k <= rows; ++k )
+    {
+        T f = y( rows - k, 0 );
+        for ( Index i = 1; i < k; ++i )
+            f -= U( rows - k, rows - i ) * ret( rows - i, 0 );
+        auto t = U( rows - k, rows - k );
+        if ( t == 0 )
+            return std::nullopt;
+        f /= t;
+        ret( rows - k, 0 ) = f;
+    }
+
+    return ret;
+}
+
+
+template <typename T, typename Impl, MatDim n_, MatDim m_>
+std::optional<Mat<T, n_, m_>> inverseLU( const MatFacade<Impl, T, n_, m_>& mat )
+{
+    static_assert( n_ == m_, "Only square matrices can be inverted" );
+    assert( mat.rows() == mat.cols() );
+
+    const auto maybeLU = LU( mat );
+    if ( !maybeLU )
+        return {};
+
+    const auto n = mat.rows();
+    const auto& [L, U] = *maybeLU;
+
+    // for each column yi of the identity matrix
+    // L * U * x = yi, denote z = U*x
+    // => L * z = yi => find z
+    // and then U * x = z => find x
+
+    Mat<T, n_, n_> ret( n, n );
+    Mat<T, n_, 1> col( n, 1 );
+    for ( Index i = 0; i < n; ++i )
+    {
+        if ( i > 0 )
+            col( i - 1, 0 ) = 0;
+        col( i, 0 ) = T( 1 );
+
+        auto x = solveLower( L, col ).and_then( [&U] ( auto&& z ) { return solveUpper( U, z ); } );
+        if ( !x )
+            return std::nullopt;
+        ret.submatrix( 0, i, n, 1 ) = *x;
+    }
+
+    return ret;
 }
 
 }
