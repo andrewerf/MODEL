@@ -42,7 +42,7 @@ auto getStrassenMult( int min_size )
 template <int input_from, int input_to, int input_step>
 static void blockSizeAndInputSizeArgs( benchmark::internal::Benchmark* b )
 {
-    for ( int bs = 8; bs <= 256; bs = 2 * bs )
+    for ( int bs : BLOCK_SIZES )
     {
         for ( int i = input_from; i <= input_to; i += input_step )
             b->Args( { bs, i } );
