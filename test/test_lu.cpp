@@ -348,3 +348,12 @@ TEST(LU, Solve) {
     auto z = solveUpper( U, y );
     EXPECT_MATRIX_NEAR( U * z, y );
 }
+
+TEST(LU, Inverse) {
+    auto mat = generateRandomMatrix( 100, 100 );
+    auto maybeInv = inverseLU( mat );
+    EXPECT_TRUE( maybeInv );
+    auto& inv = *maybeInv;
+    EXPECT_MATRIX_NEAR( mat * inv, decltype( mat )::Identity( 100, 100 ) );
+    EXPECT_MATRIX_NEAR( inv * mat, decltype( mat )::Identity( 100, 100 ) );
+}

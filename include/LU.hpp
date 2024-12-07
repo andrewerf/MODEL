@@ -5,6 +5,7 @@
 
 #include <limits>
 #include <Mat.hpp>
+#include <MatView.hpp>
 
 #include <optional>
 
@@ -126,8 +127,8 @@ std::optional<PLUQ_Result<T, n> > PLUQ( const MatFacade<Impl, T, n, m>& matOrig 
 
 /// Returns solution of the linear system L*x = y where L is a lower triangular matrix
 /// @note If L is not lower triangular, returns garbage
-template <typename T, typename Impl, MatDim n, MatDim m, MatDim n1, MatDim m1>
-Mat<T, n, 1> solveLower( const MatFacade<Impl, T, n, m>& L, const MatFacade<Impl, T, n1, m1>& y )
+template <typename T, typename Impl1, typename Impl2, MatDim n, MatDim m, MatDim n1, MatDim m1>
+Mat<T, n, 1> solveLower( const MatFacade<Impl1, T, n, m>& L, const MatFacade<Impl2, T, n1, m1>& y )
 {
     static_assert( n == m, "Only square matrices are supported" );
     assert( L.rows() == L.cols() );
@@ -151,8 +152,8 @@ Mat<T, n, 1> solveLower( const MatFacade<Impl, T, n, m>& L, const MatFacade<Impl
 
 /// Returns solution of the linear system U*x = y where U is an upper triangular matrix
 /// @note If U is not upper triangular, returns garbage
-template <typename T, typename Impl, MatDim n, MatDim m, MatDim n1, MatDim m1>
-Mat<T, n, 1> solveUpper( const MatFacade<Impl, T, n, m>& U, const MatFacade<Impl, T, n1, m1>& y )
+template <typename T, typename Impl1, typename Impl2, MatDim n, MatDim m, MatDim n1, MatDim m1>
+Mat<T, n, 1> solveUpper( const MatFacade<Impl1, T, n, m>& U, const MatFacade<Impl2, T, n1, m1>& y )
 {
     static_assert( n == m, "Only square matrices are supported" );
     assert( U.rows() == U.cols() );
@@ -170,6 +171,40 @@ Mat<T, n, 1> solveUpper( const MatFacade<Impl, T, n, m>& U, const MatFacade<Impl
         for ( Index i = 1; i < k; ++i )
             f -= U( rows - k, rows - i ) * ret( rows - i, 0 );
         f /= U( rows - k, rows - k );
+    }
+
+    return ret;
+}
+
+
+template <typename T, typename Impl, MatDim n_, MatDim m_>
+std::optional<Mat<T, n_, m_>> inverseLU( const MatFacade<Impl, T, n_, m_>& mat )
+{
+    static_assert( n_ == m_, "Only square matrices can be inverted" );
+    assert( mat.rows() == mat.cols() );
+
+    const auto maybeLU = LU( mat );
+    if ( !maybeLU )
+        return {};
+
+    const auto n = mat.rows();
+    const auto& [L, U] = *maybeLU;
+
+    // for each column yi of the identity matrix
+    // L * U * x = yi, denote z = U*x
+    // => L * z = yi => find z
+    // and then U * x = z => find x
+
+    Mat<T, n_, n_> ret( n, n );
+    Mat<T, n_, 1> col( n, 1 );
+    for ( Index i = 0; i < n; ++i )
+    {
+        if ( i > 0 )
+            col( i - 1, 0 ) = 0;
+        col( i, 0 ) = T( 1 );
+
+        auto z = solveLower( L, col );
+        ret.submatrix( 0, i, n, 1 ) = solveUpper( U, z );
     }
 
     return ret;
