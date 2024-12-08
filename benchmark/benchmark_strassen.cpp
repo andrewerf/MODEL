@@ -1,9 +1,19 @@
+// MU4IN901 - MODEL - Implementation project
+//
+// Authors:
+// Andrei Aralov (andrei.aralov@etu.sorbonne-universite.fr)
+// Emilie Gillet (emilie.gillet@etu.sorbonne-universite.fr)
+// Ruchi  Thareja (ruchi.thareja@etu.sorbonne-universite.fr)
+//
+// -----------------------------------------------------------------------------
+//
+// Benchmark of matrix multiplication algorithms.
+
 #include <StrassenInversion.hpp>
 #include <StrassenMultiplication.hpp>
 #include <random.hpp>
 #include <benchmark/benchmark.h>
 #include <stdexcept>
-
 
 using namespace M;
 

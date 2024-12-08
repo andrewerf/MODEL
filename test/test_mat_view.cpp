@@ -1,12 +1,18 @@
+// MU4IN901 - MODEL - Implementation project
 //
-// Created by Andrey Aralov on 11/15/24.
+// Authors:
+// Andrei Aralov (andrei.aralov@etu.sorbonne-universite.fr)
+// Emilie Gillet (emilie.gillet@etu.sorbonne-universite.fr)
+// Ruchi  Thareja (ruchi.thareja@etu.sorbonne-universite.fr)
 //
+// -----------------------------------------------------------------------------
+//
+// Unit tests for the MatView class.
+
 #include <gtest/gtest.h>
 #include <MatView.hpp>
 
 using namespace M;
-
-
 
 TEST(MatView, ConstructionAndAccess) {
     // Test construction from a matrix

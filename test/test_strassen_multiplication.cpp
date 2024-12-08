@@ -1,10 +1,13 @@
-// S1 2024, MODEL
+// MU4IN901 - MODEL - Implementation project
 //
-// Author: Emilie Gillet (emilie.gillet@etu.sorbonne-universite.fr)
+// Authors:
+// Andrei Aralov (andrei.aralov@etu.sorbonne-universite.fr)
+// Emilie Gillet (emilie.gillet@etu.sorbonne-universite.fr)
+// Ruchi  Thareja (ruchi.thareja@etu.sorbonne-universite.fr)
 //
 // -----------------------------------------------------------------------------
 //
-// Unit tests for Strassen Multiplication.
+// Unit tests for the implementation of Strassen's multiplication algorithm.
 
 // #include <BLASMultiplication.hpp>
 #include <random.hpp>

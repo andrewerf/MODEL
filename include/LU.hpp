@@ -1,6 +1,14 @@
+// MU4IN901 - MODEL - Implementation project
 //
-// Created by Andrey Aralov on 9/17/24.
+// Authors:
+// Andrei Aralov (andrei.aralov@etu.sorbonne-universite.fr)
+// Emilie Gillet (emilie.gillet@etu.sorbonne-universite.fr)
+// Ruchi  Thareja (ruchi.thareja@etu.sorbonne-universite.fr)
 //
+// -----------------------------------------------------------------------------
+//
+// LU and PLUQ decompositions; matrix inversion by linear system solving.
+
 #pragma once
 
 #include <limits>

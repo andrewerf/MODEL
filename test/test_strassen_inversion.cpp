@@ -1,6 +1,13 @@
+// MU4IN901 - MODEL - Implementation project
 //
-// Created by Andrey Aralov on 11/23/24.
+// Authors:
+// Andrei Aralov (andrei.aralov@etu.sorbonne-universite.fr)
+// Emilie Gillet (emilie.gillet@etu.sorbonne-universite.fr)
+// Ruchi  Thareja (ruchi.thareja@etu.sorbonne-universite.fr)
 //
+// -----------------------------------------------------------------------------
+//
+// Unit tests for the implementation of Strassen's inversion algorithm.
 
 #include <random.hpp>
 #include <StrassenInversion.hpp>

@@ -1,7 +1,16 @@
+// MU4IN901 - MODEL - Implementation project
 //
-// Created by Andrey Aralov on 12/1/24.
+// Authors:
+// Andrei Aralov (andrei.aralov@etu.sorbonne-universite.fr)
+// Emilie Gillet (emilie.gillet@etu.sorbonne-universite.fr)
+// Ruchi  Thareja (ruchi.thareja@etu.sorbonne-universite.fr)
 //
+// -----------------------------------------------------------------------------
+//
+// Generation of matrices with random values.
+
 #pragma once
+
 #include <random>
 #include "Mat.hpp"
 
