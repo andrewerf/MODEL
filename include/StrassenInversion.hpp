@@ -53,7 +53,7 @@ std::optional<Mat<T, n, m> > inverseStrassen( const MatFacade<Impl, T, n, m>& ma
     const auto& t = *Z_inv;
 
     const auto y = -mult( mult( e, b ), t );
-    const auto z = -mult( mult( t, c ), e );
+    const auto z = -mult( t, ce );
     const auto x = e - mult( y, ce );
 
     Mat<T, n, m> ret( mat.rows(), mat.cols() );
