@@ -533,15 +533,17 @@ Mat<T, m, p> multiplyStrassen(
 // then each of these into micro_size x micro_size products, and use the
 // optimized routine multiplySubmatrixLeaf on the tiles.
 template<
+    OpMode op=OVERWRITE,
     Index micro_size=32,
     Index macro_size=256,
     typename T,
-    typename ImplA, MatDim m_a, MatDim n_a,
-    typename ImplB, MatDim n_b, MatDim p_b>
-Mat<T, m_a, p_b> multiplyTiled(
+    MatDim m_a, MatDim n_a, MatDim n_b, MatDim p_b,
+    typename ImplA, typename ImplB, typename ImplC>
+void multiplyTiled(
+        MatFacade<ImplC, T, m_a, p_b>& c,
         const MatFacade<ImplA, T, m_a, n_a>& a,
         const MatFacade<ImplB, T, n_b, p_b>& b) {
-    Mat<T, m_a, p_b> c(a.rows(), b.cols());
+    static_assert(n_a == n_b);
 
     Index m = a.rows();
     Index n = a.cols();
@@ -549,6 +551,14 @@ Mat<T, m_a, p_b> multiplyTiled(
 
     assert(b.rows() == n);
     assert(c.rows() == m && c.cols() == p);
+
+    if (op == OVERWRITE) {
+        for (Index i = 0; i < m; ++i) {
+            for (Index j = 0; j < p; ++j) {
+                c(i, j) = 0;
+            }
+        }
+    }
 
     for (Index j_macro = 0; j_macro < p; j_macro += macro_size) {
         for (Index k_macro = 0; k_macro < n; k_macro += macro_size) {
@@ -579,6 +589,20 @@ Mat<T, m_a, p_b> multiplyTiled(
             }
         }
     }
+}
+
+template<
+    Index micro_size=32,
+    Index macro_size=256,
+    typename T,
+    typename ImplA, MatDim m, MatDim n_a,
+    typename ImplB, MatDim n_b, MatDim p>
+Mat<T, m, p> multiplyTiled(
+        const MatFacade<ImplA, T, m, n_a>& a,
+        const MatFacade<ImplB, T, n_b, p>& b) {
+    static_assert(n_a == n_b);
+    Mat<T, m, p> c(a.rows(), b.cols());
+    multiplyTiled<ACCUMULATE, micro_size, macro_size>(c, a, b);
     return c;
 }
 
