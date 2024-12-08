@@ -18,14 +18,15 @@
 using namespace M;
 
 constexpr auto cTimeUnit = benchmark::kMillisecond;
-using T = float;
+using T = double;
 
+// Returns a version of multiplyStrassen specialized for a given value of
+// min_size (minimum size of a leaf product)
 template <Index min_size>
 Mat<T> multiplyStrassen_TE( const Mat<T>& a, const Mat<T>& b )
 {
     return multiplyStrassen<min_size>( a, b );
 }
-
 
 auto getStrassenMult( int min_size )
 {
@@ -48,7 +49,7 @@ auto getStrassenMult( int min_size )
     }
 }
 
-
+// Generates the combination of parameters used to benchmark multiplication.
 template <int input_from, int input_to, int input_step>
 static void multBlockSizeAndInputSizeArgs( benchmark::internal::Benchmark* b )
 {
@@ -59,6 +60,7 @@ static void multBlockSizeAndInputSizeArgs( benchmark::internal::Benchmark* b )
     }
 }
 
+// Generates the combination of parameters used to benchmark inversion.
 template <int input_from, int input_to, int input_step>
 static void invBlockSizeAndInputSizeArgs( benchmark::internal::Benchmark* b )
 {
@@ -69,7 +71,6 @@ static void invBlockSizeAndInputSizeArgs( benchmark::internal::Benchmark* b )
             b->Args( { inv_bs, mult_bs, i } );
     }
 }
-
 
 static void BM_NaiveStrassenInversion( benchmark::State& state )
 {

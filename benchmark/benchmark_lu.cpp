@@ -16,7 +16,7 @@
 
 namespace {
 
-using T = float;
+using T = double;
 
 // Benchmark for LU decomposition
 void BM_LU(benchmark::State& state) {
@@ -34,6 +34,7 @@ void BM_PLUQ(benchmark::State& state) {
     }
 }
 
+// Benchmark for LU inversion
 void BM_LUInversion( benchmark::State& state )
 {
     auto mat = M::generateRandomMatrix<T>( state.range( 0 ), state.range( 0 ) );
