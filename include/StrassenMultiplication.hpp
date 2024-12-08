@@ -107,12 +107,6 @@ void multiplySubmatrixLeaf(
 
     // Copy on the stack the transpose of B to speed up
     // the subsequent multiplication.
-    //
-    // When B is stored in column-major order, the product A * B only requires
-    // access to elements that are contiguous in memory, and will thus be
-    // present in cache memory. In addition, the compiler can make use of
-    // SIMD instructions loading 8 adjacent values from RAM to the SIMD
-    // registers.
     typename SubmatrixC::ElemT b_transpose[p * n];
     for (Index i = 0; i < n; ++i) {
         for (Index j = 0; j < p; ++j) {
@@ -392,6 +386,7 @@ void multiplySubmatrixSquare(
     auto m_7 = workspace->m_7_m_3.submatrix(0, 0, m2, p2);
     auto a_12_minus_a_22 = workspace->a.submatrix(0, 0, m2, n - n2);
     auto b_21_plus_b_22 = workspace->b.submatrix(0, 0, n - n2, p2);
+
     accumulateSubmatrix<-1>(a_12_minus_a_22, a_12, a_22);
     accumulateSubmatrix<+1>(b_21_plus_b_22, b_21, b_22);
     multiplySubmatrixSquare<OVERWRITE, min_size, SplitPolicy>(
@@ -530,6 +525,60 @@ Mat<T, m, p> multiplyStrassen(
     static_assert(n_a == n_b);
     Mat<T, m, p> c(a.rows(), b.cols());
     multiplySubmatrix<OVERWRITE, min_size, SplitPolicy>(c, a, b);
+    return c;
+}
+
+// For comparison purposes, a non-Strassen, but efficient, multiplication
+// algorithm. It breaks down the product into macro_size x macro_size products,
+// then each of these into micro_size x micro_size products, and use the
+// optimized routine multiplySubmatrixLeaf on the tiles.
+template<
+    Index micro_size=32,
+    Index macro_size=256,
+    typename T,
+    typename ImplA, MatDim m_a, MatDim n_a,
+    typename ImplB, MatDim n_b, MatDim p_b>
+Mat<T, m_a, p_b> multiplyTiled(
+        const MatFacade<ImplA, T, m_a, n_a>& a,
+        const MatFacade<ImplB, T, n_b, p_b>& b) {
+    Mat<T, m_a, p_b> c(a.rows(), b.cols());
+
+    Index m = a.rows();
+    Index n = a.cols();
+    Index p = b.cols();
+
+    assert(b.rows() == n);
+    assert(c.rows() == m && c.cols() == p);
+
+    for (Index j_macro = 0; j_macro < p; j_macro += macro_size) {
+        for (Index k_macro = 0; k_macro < n; k_macro += macro_size) {
+            for (Index i_macro = 0; i_macro < m; i_macro += macro_size) {
+                for (Index j = j_macro; j < std::min(j_macro + macro_size, p); j += micro_size) {
+                    for (Index k = k_macro; k < std::min(k_macro + macro_size, n); k += micro_size) {
+                        for (Index i = i_macro; i < std::min(i_macro + macro_size, m); i += micro_size) {
+                            Index mm = std::min(micro_size, m - i);
+                            Index nn = std::min(micro_size, n - k);
+                            Index pp = std::min(micro_size, p - j);
+                            auto c_ij = c.submatrix(i, j, mm, pp);
+                            auto a_ik = a.submatrix(i, k, mm, nn);
+                            auto b_kj = b.submatrix(k, j, nn, pp);
+                            if (mm == micro_size && nn == micro_size && pp == micro_size) {
+                                // Force the instantiation of a
+                                // specialized kernel when the size is
+                                // exactly micro_size x micro_size x micro_size
+                                auto a_ = a_ik.template submatrix<micro_size, micro_size>(0, 0);
+                                auto b_ = b_kj.template submatrix<micro_size, micro_size>(0, 0);
+                                auto c_ = c_ij.template submatrix<micro_size, micro_size>(0, 0);
+                                multiplySubmatrixLeaf<ACCUMULATE>(c_, a_, b_);
+                            } else {
+                                multiplySubmatrixLeaf<ACCUMULATE>(c_ij, a_ik, b_kj);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     return c;
 }
 

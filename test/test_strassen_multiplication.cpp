@@ -82,6 +82,9 @@ const MatrixProductSize kBenchmarkSizes[] = {
     { 4000, 800, 4000 },
     // 0.5s (1.3s without split) [BLAS: 27ms]
     { 800, 8000, 800 },
+
+    { 1000, 9000, 1000 },
+    { 3000, 3000, 3000 },
 };
 
 INSTANTIATE_TEST_SUITE_P(
