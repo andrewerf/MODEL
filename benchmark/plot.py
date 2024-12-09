@@ -19,6 +19,7 @@ METRICS = [
     "bytes_per_second",
     "items_per_second",
     "iterations",
+    "gflops"
 ]
 TRANSFORMS = {"": lambda x: x, "inverse": lambda x: 1.0 / x}
 
@@ -32,6 +33,8 @@ def get_default_ylabel(args):
         label = args.transform + "(" + args.metric + ")"
     if args.relative_to is not None:
         label += " relative to %s" % args.relative_to
+    if args.flops is not None:
+        label = "GFLOPS"
     return label
 
 
@@ -42,7 +45,13 @@ def parse_args():
         "--filter",
         type=str,
         default=None,
-        help='regex to filter names of benchmarks that are displayed'
+        help="regex to filter names of benchmarks that are displayed"
+    )
+    parser.add_argument(
+        "--flops",
+        type=str,
+        default=None,
+        help="Expression to compute the number of floating-point operations per second"
     )
     parser.add_argument(
         "--xfieldvar",
@@ -169,16 +178,26 @@ def read_data(args):
     data["label"] = data["name"].apply(lambda x: x.split("/")[0])
     ps = InputSizeParser(args)
     data = ps.populate(data)
+
+    if args.flops is not None:
+        input_size = data["input"]
+        ops = eval(args.flops)
+        data["gflops"] = ops
+        data["gflops"] /= (data["real_time"] / 1000.0) * 1e9
+
     data[args.metric] = data[args.metric].apply(TRANSFORMS[args.transform])
     if args.filter is not None:
         data = data[data["label"].str.contains(args.filter)]
+    data = data.sort_values('input')
     return data
 
 
 def plot_groups(label_groups, args):
     """Display the processed data"""
+    plt.figure(figsize=(8,6))
+    metric = "gflops" if args.flops is not None else args.metric
     for label, group in label_groups.items():
-        plt.plot(group["input"], group[args.metric], label=label, marker=".")
+        plt.plot(group["input"], group[metric], label=label, marker=".")
     if args.logx:
         plt.xscale("log")
     if args.logy:
@@ -208,7 +227,6 @@ def main():
             msg = "Key %s is not present in the benchmark output"
             logging.error(msg, str(key))
             exit(1)
-
     if args.relative_to is not None:
         for label in label_groups:
             label_groups[label][args.metric] /= baseline
