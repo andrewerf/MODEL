@@ -48,14 +48,14 @@ std::optional<Mat<T, n, m> > inverseStrassen( const MatFacade<Impl, T, n, m>& ma
     const auto b = mat.submatrix( 0, c2, r2, mat.cols() - c2 );
     const auto d = mat.submatrix( r2, c2, mat.rows() - r2, mat.cols() - c2 );
 
-    const auto a_inv = inverseStrassen( a );
+    const auto a_inv = inverseStrassen( a, mult );
     if ( !a_inv )
         return {};
 
     const auto& e = *a_inv;
     const auto ce = mult( c, e );
     const auto Z = d - mult( ce, b );
-    const auto Z_inv = inverseStrassen( Z );
+    const auto Z_inv = inverseStrassen( Z, mult );
     if ( !Z_inv )
         return {};
     const auto& t = *Z_inv;
