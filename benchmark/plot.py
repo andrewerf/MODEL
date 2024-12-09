@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Script to visualize google-benchmark output
+
 Taken from https://github.com/lakshayg/google_benchmark_plot with slight modifications
+
 """
 from __future__ import print_function
 import argparse
@@ -10,6 +12,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import pathlib
+import re
 
 logging.basicConfig(format="[%(levelname)s] %(message)s")
 
@@ -104,6 +107,9 @@ def parse_args():
         "--logy", action="store_true", help="plot y-axis on a logarithmic scale"
     )
     parser.add_argument(
+        "--clean_labels", action="store_true", help="cleanup the benchmark label names"
+    )
+    parser.add_argument(
         "--output", type=str, default="", help="File in which to save the graph"
     )
 
@@ -158,6 +164,18 @@ class InputSizeParser:
         return ret
 
 
+def clean_labels(label):
+    """Convert a benchmark label into a nice-looking string"""
+    # Remove prefix.
+    label = label.replace("BM_", "")
+
+    # Split CamelCase
+    label = " ".join(re.sub('([A-Z][a-z]+)', r' \1', re.sub('([A-Z]+)', r' \1', label)).split())
+
+    label = label.replace("_", " ")
+    return label
+
+
 def read_data(args):
     """Read and process dataframe using commandline args"""
     extension = pathlib.Path(args.file.name).suffix
@@ -189,6 +207,8 @@ def read_data(args):
     if args.filter is not None:
         data = data[data["label"].str.contains(args.filter)]
     data = data.sort_values('input')
+    if args.clean_labels:
+        data["label"] = data["label"].apply(clean_labels)
     return data
 
 
