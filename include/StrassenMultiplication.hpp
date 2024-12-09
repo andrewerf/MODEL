@@ -50,7 +50,7 @@ typedef std::tuple<Index, Index, Index> MatrixProductSize;
 // NaiveSplitPolicy: cut in half, ie k = ceil(n / 2).
 //
 // PowerOfTwoSplitPolicy: cut so that one of the pieces has a dimension that
-// is a power of 2.
+// is a power of 2. Cut in half if the split is too unbalanced.
 
 struct NaiveSplitPolicy {
 
@@ -75,8 +75,9 @@ Index operator()(Index n, Index min_size) {
         next_pow >>= 1;
     }
 
-    // Ensure that the chosen point if past the middle;
-    return std::max(next_pow, n - next_pow);
+    // If the split is too uneven, use the middle point.
+    Index split_point = abs(next_pow - half) <= 8 ? next_pow : half;
+    return  std::max(split_point, n - split_point);
 }
 
 };
@@ -451,7 +452,7 @@ void multiplySubmatrixSquare(
 template <
     OpMode op=OVERWRITE,
     Index min_size=64,
-    typename SplitPolicy=NaiveSplitPolicy,
+    typename SplitPolicy=PowerOfTwoSplitPolicy,
     typename T,
     MatDim m_a, MatDim n_a, MatDim n_b, MatDim p_b,
     typename ImplA, typename ImplB, typename ImplC>
@@ -526,7 +527,7 @@ void multiplySubmatrix(
 // objects.
 template <
     Index min_size=64,
-    typename SplitPolicy=NaiveSplitPolicy,
+    typename SplitPolicy=PowerOfTwoSplitPolicy,
     typename T,
     typename ImplA, MatDim m, MatDim n_a,
     typename ImplB, MatDim n_b, MatDim p>
