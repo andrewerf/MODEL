@@ -10,6 +10,7 @@
 // Benchmark of matrix multiplication algorithms.
 
 #include <StrassenInversion.hpp>
+#include <StrassenInversionFast.hpp>
 #include <StrassenMultiplication.hpp>
 #include <random.hpp>
 #include <benchmark/benchmark.h>
@@ -141,7 +142,7 @@ static void BM_TiledMultiplication( benchmark::State& state )
 BENCHMARK(BM_TiledMultiplication)->DenseRange( 100, 3300, 200 )->Unit( cTimeUnit );
 BENCHMARK(BM_TiledMultiplication)->DenseRange( 2000, 8000, 2000 )->Unit( cTimeUnit );
 
-/*static void BM_StrassenInversionFast( benchmark::State& state )
+static void BM_StrassenInversionFast( benchmark::State& state )
 {
     auto sz = state.range( 0 );
     auto mat = generateRandomMatrix<T>( sz, sz );
@@ -151,4 +152,4 @@ BENCHMARK(BM_TiledMultiplication)->DenseRange( 2000, 8000, 2000 )->Unit( cTimeUn
     }
 }
 
-BENCHMARK(BM_StrassenInversionFast)->DenseRange( 100, 3300, 200 )->Unit( cTimeUnit );*/
+BENCHMARK(BM_StrassenInversionFast)->DenseRange( 100, 3300, 200 )->Unit( cTimeUnit );
