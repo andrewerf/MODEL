@@ -64,7 +64,7 @@ struct PowerOfTwoSplitPolicy {
 
 Index operator()(Index n, Index min_size) {
     // The ideal split point is in the half.
-    Index half = n / 2;
+    Index half = (n + 1) / 2;
 
     // Search for the nearest min_size x 2^k close to the half.
     Index next_pow = min_size;
@@ -326,8 +326,8 @@ auto splitSubmatrix(T& a, Index m2, Index n2) {
 // Multiply two submatrices using the Strassen algorithm.
 template<
     OpMode op=OVERWRITE,
-    Index min_size=16,
-    typename SplitPolicy=NaiveSplitPolicy,
+    Index min_size=64,
+    typename SplitPolicy=PowerOfTwoSplitPolicy,
     typename T,
     MatDim m_a, MatDim n_a, MatDim n_b, MatDim p_b,
     typename ImplA, typename ImplB, typename ImplC>
