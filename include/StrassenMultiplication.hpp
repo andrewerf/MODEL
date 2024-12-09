@@ -89,50 +89,9 @@ enum OpMode {
     ACCUMULATE
 };
 
-// Perform the operation C <- A x B or C <- C + A x B on a submatrix (view).
-// This will be called when the Strassen iterations has divided the
-// multiplication problem into small enough matrices.
-/*template<
-    OpMode op=OVERWRITE,
-    typename SubmatrixC,
-    typename SubmatrixA,
-    typename SubmatrixB>
-void multiplySubmatrixLeaf(
-        SubmatrixC& c,
-        const SubmatrixA& a,
-        const SubmatrixB& b) {
-    Index m = a.rows();
-    Index n = a.cols();
-    Index p = b.cols();
+#define EXPLICIT_VECTORIZATION
 
-    assert(b.rows() == n);
-    assert(c.rows() == m && c.cols() == p);
-
-    // Copy on the stack the transpose of B to speed up
-    // the subsequent multiplication.
-    typename SubmatrixC::ElemT b_transpose[p * n];
-    for (Index i = 0; i < n; ++i) {
-        for (Index j = 0; j < p; ++j) {
-            b_transpose[j * n + i] = b(i, j);
-        }
-    }
-
-    for (Index i = 0; i < m; ++i) {
-        for (Index j = 0; j < p; ++j) {
-            typename SubmatrixC::ElemT s = 0;
-            for (Index k = 0; k < n; ++k) {
-                s += a(i, k) * b_transpose[j * n + k];
-                // Uncomment this to double the computation time.
-                // s += a(i, k) * b(k, j);
-            }
-            if (op == ACCUMULATE) {
-                c(i, j) += s;
-            } else {
-                c(i, j) = s;
-            }
-        }
-    }
-}*/
+#ifdef EXPLICIT_VECTORIZATION
 
 // Perform the operation C <- A x B or C <- C + A x B on a submatrix (view).
 // This will be called when the Strassen iterations has divided the
@@ -198,6 +157,55 @@ void multiplySubmatrixLeaf(
         }
     }
 }
+
+#else
+
+// Perform the operation C <- A x B or C <- C + A x B on a submatrix (view).
+// This will be called when the Strassen iterations has divided the
+// multiplication problem into small enough matrices.
+template<
+    OpMode op=OVERWRITE,
+    typename SubmatrixC,
+    typename SubmatrixA,
+    typename SubmatrixB>
+void multiplySubmatrixLeaf(
+        SubmatrixC& c,
+        const SubmatrixA& a,
+        const SubmatrixB& b) {
+    Index m = a.rows();
+    Index n = a.cols();
+    Index p = b.cols();
+
+    assert(b.rows() == n);
+    assert(c.rows() == m && c.cols() == p);
+
+    // Copy on the stack the transpose of B to speed up
+    // the subsequent multiplication.
+    typename SubmatrixC::ElemT b_transpose[p * n];
+    for (Index i = 0; i < n; ++i) {
+        for (Index j = 0; j < p; ++j) {
+            b_transpose[j * n + i] = b(i, j);
+        }
+    }
+
+    for (Index i = 0; i < m; ++i) {
+        for (Index j = 0; j < p; ++j) {
+            typename SubmatrixC::ElemT s = 0;
+            for (Index k = 0; k < n; ++k) {
+                s += a(i, k) * b_transpose[j * n + k];
+                // Uncomment this to double the computation time.
+                // s += a(i, k) * b(k, j);
+            }
+            if (op == ACCUMULATE) {
+                c(i, j) += s;
+            } else {
+                c(i, j) = s;
+            }
+        }
+    }
+}
+
+#endif // EXPLICIT_VECTORIZATION
 
 // Perform the operation C <- A ± B or C <- C + A ± B on a
 // submatrix (view) without copy. Handle mismatches in sizes of C
