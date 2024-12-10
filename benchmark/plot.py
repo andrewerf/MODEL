@@ -228,7 +228,7 @@ def plot_groups(label_groups, args):
     plt.legend()
     if args.output:
         logging.info("Saving to %s" % args.output)
-        plt.savefig(args.output)
+        plt.savefig(args.output, dpi=300)
     else:
         plt.show()
 
