@@ -226,6 +226,7 @@ def plot_groups(label_groups, args):
     plt.ylabel(args.ylabel)
     plt.title(args.title)
     plt.legend()
+    plt.grid(color='gray', linestyle='dashed')
     if args.output:
         logging.info("Saving to %s" % args.output)
         plt.savefig(args.output, dpi=300)
