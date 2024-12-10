@@ -18,7 +18,6 @@
 
 using namespace M;
 
-constexpr auto cTimeUnit = benchmark::kMillisecond;
 using T = double;
 
 static void BM_NaiveMultiplication( benchmark::State& state )
@@ -32,7 +31,7 @@ static void BM_NaiveMultiplication( benchmark::State& state )
     }
 }
 
-BENCHMARK(BM_NaiveMultiplication)->DenseRange( 100, 2000, 200 )->Unit( cTimeUnit );
+BENCHMARK(BM_NaiveMultiplication)->DenseRange( 100, 2000, 200 );
 
 
     template <Index min_size>
@@ -105,7 +104,7 @@ static void BM_NaiveStrassenInversion( benchmark::State& state )
     }
 }
 
-BENCHMARK(BM_NaiveStrassenInversion)->DenseRange( 100, 2000, 200 )->Unit( cTimeUnit );
+BENCHMARK(BM_NaiveStrassenInversion)->DenseRange( 100, 2000, 200 );
 
 
 static void BM_StrassenInversion( benchmark::State& state )
@@ -119,8 +118,8 @@ static void BM_StrassenInversion( benchmark::State& state )
     }
 }
 
-BENCHMARK(BM_StrassenInversion)->Apply( multBlockSizeAndInputSizeArgs<100, 2600, 200> )->Unit( cTimeUnit );
-BENCHMARK(BM_StrassenInversion)->Apply( multBlockSizeAndInputSizeArgs<2000, 6000, 2000> )->Unit( cTimeUnit );
+BENCHMARK(BM_StrassenInversion)->Apply( multBlockSizeAndInputSizeArgs<100, 2600, 200> );
+BENCHMARK(BM_StrassenInversion)->Apply( multBlockSizeAndInputSizeArgs<2000, 6000, 2000> );
 
 static void BM_StrassenMultiplication( benchmark::State& state )
 {
@@ -134,8 +133,8 @@ static void BM_StrassenMultiplication( benchmark::State& state )
     }
 }
 
-BENCHMARK(BM_StrassenMultiplication)->Apply( multBlockSizeAndInputSizeArgs<100, 3300, 200> )->Unit( cTimeUnit );
-BENCHMARK(BM_StrassenMultiplication)->Apply( multBlockSizeAndInputSizeArgs<2000, 8000, 2000> )->Unit( cTimeUnit );
+BENCHMARK(BM_StrassenMultiplication)->Apply( multBlockSizeAndInputSizeArgs<100, 3300, 200> );
+BENCHMARK(BM_StrassenMultiplication)->Apply( multBlockSizeAndInputSizeArgs<2000, 8000, 2000> );
 
 static void BM_TiledMultiplication( benchmark::State& state )
 {
@@ -148,5 +147,5 @@ static void BM_TiledMultiplication( benchmark::State& state )
     }
 }
 
-BENCHMARK(BM_TiledMultiplication)->DenseRange( 100, 3300, 200 )->Unit( cTimeUnit );
-BENCHMARK(BM_TiledMultiplication)->DenseRange( 2000, 8000, 2000 )->Unit( cTimeUnit );
+BENCHMARK(BM_TiledMultiplication)->DenseRange( 100, 3300, 200 );
+BENCHMARK(BM_TiledMultiplication)->DenseRange( 2000, 8000, 2000 );
