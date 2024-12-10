@@ -119,7 +119,7 @@ static void BM_StrassenInversion( benchmark::State& state )
 }
 
 BENCHMARK(BM_StrassenInversion)->Apply( multBlockSizeAndInputSizeArgs<100, 2600, 200> );
-BENCHMARK(BM_StrassenInversion)->Apply( multBlockSizeAndInputSizeArgs<2000, 6000, 2000> );
+BENCHMARK(BM_StrassenInversion)->Apply( multBlockSizeAndInputSizeArgs<2000, 8000, 2000> );
 
 static void BM_StrassenMultiplication( benchmark::State& state )
 {
