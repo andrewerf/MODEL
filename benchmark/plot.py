@@ -181,7 +181,7 @@ def read_data(args):
     extension = pathlib.Path(args.file.name).suffix
     try:
         if extension == '' or extension == ".csv":
-            data = pd.read_csv(args.file, usecols=["name", args.metric])
+            data = pd.read_csv(args.file, usecols=["name", args.metric, "time_unit"])
         elif extension == ".json":
             json_data = json.load(args.file)
             data = pd.DataFrame(json_data["benchmarks"])
@@ -193,7 +193,12 @@ def read_data(args):
             'Could not parse the benchmark data. Did you forget "--benchmark_format=[csv|json] when running the benchmark"?'
         )
         exit(1)
+    # Fix data in the wrong units
+    if "time" in args.metric:
+        data.loc[data["time_unit"] == "ns", args.metric] /= 1e6
+
     data["label"] = data["name"].apply(lambda x: x.split("/")[0])
+
     ps = InputSizeParser(args)
     data = ps.populate(data)
 
@@ -214,7 +219,7 @@ def read_data(args):
 
 def plot_groups(label_groups, args):
     """Display the processed data"""
-    plt.figure(figsize=(8,6))
+    plt.figure(figsize=(6,4))
     metric = "gflops" if args.flops is not None else args.metric
     for label, group in label_groups.items():
         plt.plot(group["input"], group[metric], label=label, marker=".")
@@ -227,6 +232,7 @@ def plot_groups(label_groups, args):
     plt.title(args.title)
     plt.legend()
     plt.grid(color='gray', linestyle='dashed')
+    plt.tight_layout()
     if args.output:
         logging.info("Saving to %s" % args.output)
         plt.savefig(args.output, dpi=300)
