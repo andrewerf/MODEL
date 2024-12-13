@@ -4,9 +4,9 @@ set -e
 
 cmake -B ./build -DCMAKE_BUILD_TYPE=Release
 cmake --build ./build --config Release --parallel 2
-#./build/test/test_all
+./build/test/test_all
 printf "\n\n *** The benchmark has started and may take some time to finish *** \n\n"
-#./build/benchmark/mat_benchmark --benchmark_format=csv --benchmark_time_unit=ms | tee build/benchmark.csv
+./build/benchmark/mat_benchmark --benchmark_format=csv --benchmark_time_unit=ms | tee build/benchmark.csv
 
 cat ./build/benchmark.csv
 
