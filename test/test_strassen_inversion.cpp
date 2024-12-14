@@ -11,6 +11,7 @@
 
 #include <random.hpp>
 #include <StrassenInversion.hpp>
+#include <StrassenMultiplication.hpp>
 
 #include "test_utils.hpp"
 
@@ -33,6 +34,30 @@ TEST( MatFastInv, NaiveDoubleInv )
     auto invinv = inverseStrassen( inv ).value();
     EXPECT_MATRIX_NEAR(orig, invinv, 1e-3);
 }
+
+constexpr auto strassenMultLambda = [] ( const auto& x, const auto& y )
+{
+    return multiplyStrassen( x, y );
+};
+
+TEST( MatFastInv, Identity )
+{
+    constexpr Index sz = 100;
+    auto orig = generateRandomMatrix( sz, sz );
+    auto inv = inverseStrassen( orig, strassenMultLambda ).value();
+    auto prod = orig * inv;
+    EXPECT_MATRIX_NEAR(prod, Mat<double>::Identity( sz, sz ), 1e-3);
+}
+
+TEST( MatFastInv, DoubleInv )
+{
+    constexpr Index sz = 100;
+    auto orig = generateRandomMatrix( sz, sz );
+    auto inv = inverseStrassen( orig, strassenMultLambda ).value();
+    auto invinv = inverseStrassen( inv, strassenMultLambda ).value();
+    EXPECT_MATRIX_NEAR(orig, invinv, 1e-3);
+}
+
 
 TEST( MatFastInv, BigMatrix )
 {
