@@ -8,6 +8,11 @@
 
 The library is header-only. Tests and benchmarks are compiled to separate executables.
 
+### Requirements
+
+* CMake
+* GoogleTest and Google Benchmark (these libraries are automatically installed by CMake)
+* Optionally, python, matplotlib and pandas for plotting the graphs
 
 ### End to end script
 
